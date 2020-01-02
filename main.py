@@ -216,7 +216,7 @@ class DB:
                     if cur:
                         cur.close()
 
-    def update_db(self, uid):
+    def update_count(self, uid):
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
@@ -252,21 +252,20 @@ class DB:
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
-                    sqlStr = "SELECT uid FROM usertable WHERE (uid) = (%s)"
+                    sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
                     cur.execute(sqlStr, (uid,))
                     results = cur.fetchall()
 
                     if len(results) > 0:
-                        mes = "存在しますで"
+                        color_theme = results[0][1]
                     else:
-                        mes = "そのIDは存在しません。"
                         self.add_to_db(uid, "uid")
 
-                    print(mes)
-                    return True
+                    return True, color_theme
                 except:
                     print("Error: Cannnot isin")
-                    return False
+                    color_theme = "default"
+                    return False, color_theme
                 finally:
                     if cur:
                         cur.close()
@@ -291,7 +290,8 @@ class Prepare:
         :return: json_content
         """
         # load template
-        f = open('./theme/yellow/rakutan_detail.json', 'r', encoding='utf-8')
+        f = open(f'./theme/{color_theme}/rakutan_detail.json', 'r', encoding='utf-8')
+
         data = json.dumps(json.load(f))
         self.json_content = LoadJSON(data)
 
@@ -353,15 +353,16 @@ class Prepare:
         """
         facultyname_abbr = {'文学部': '文', '教育学部': '教', '法学部': '法', '経済学部': '経', '理学部': '理', '医学部': '医医', '医学部（人間健康科学科）': '人健',
                             '薬学部': '薬', '工学部': '工', '農学部': '農', '総合人間学部': '総人', '国際高等教育院': '般教'}
+        color_theme_font = {'default': '#4c7cf5', 'yellow': '#D17A22'}
         processed_count = 0
         number_of_pages = math.ceil(record_count / 20)
 
         # load templates
         # f: first page flex message
-        f = open('./theme/yellow/search_result.json', 'r', encoding='utf-8')
+        f = open(f'./theme/{color_theme}/search_result.json', 'r', encoding='utf-8')
         f_data = json.dumps(json.load(f))
         # g: second page~ flex message
-        g = open('./theme/yellow/search_result_more.json', 'r', encoding='utf-8')
+        g = open(f'./theme/{color_theme}/search_result_more.json', 'r', encoding='utf-8')
         g_data = json.dumps(json.load(g))
 
         # put all pages into json_contents list
@@ -391,6 +392,7 @@ class Prepare:
                                'decoration': 'underline', 'margin': 'none',
                                'action': {'type': 'message', 'label': 'action', 'text': '#[Lecture ID]'}, 'offsetBottom': '3px',
                                'flex': 2}], 'margin': 'lg'}
+                socket['contents'][1]['color'] = color_theme_font[color_theme]
                 socket['contents'][0][
                     'text'] = f"[{facultyname_abbr[array['facultyname'][processed_count]]}]{array['lecturename'][processed_count]}"
                 socket["contents"][1]['action']['text'] = '#' + str(array['id'][processed_count])
@@ -419,8 +421,7 @@ class Prepare:
         :param text: received_text
         :return: Bool
         """
-        if len(text) == 8 and text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[
-                                                                                                           2:7].isdigit():
+        if text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[2:7].isdigit():
             return True
 
     def isSet(self, value):
@@ -555,6 +556,7 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+    global color_theme
     token = event.reply_token
     uid = event.source.user_id
     received_message = event.message.text.strip()
@@ -571,22 +573,28 @@ def handle_message(event):
         "判定詳細": fn.rakutan_hantei
     }
 
+    check_user = db.isinDB(uid)
+    if check_user[0]:
+        # add 1 to search counter
+        db.update_count(uid)
+    color_theme = check_user[1]
+
     if received_message in response:
         # 1.Check if reserved word is sent.
         response[received_message](token)
     else:
-
+        # 2.Check if kakomon URL is sent:
         if prepare.isURL(received_message):
             fetch_result = db.get_by_id(received_message[2:7])
             if fetch_result[0] == 'success':
                 fetch_result = db.kakomon_wait_for_merge(received_message, uid)
-                if fetch_result[0] == 'success':
+                if fetch_result == 'success':
                     send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
                 else:
                     send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
             else:
                 send.send_text("指定された講義IDは存在しません。")
-        # 2.Check if ID is sent:
+        # 3.Check if ID is sent:
         elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
             if fetch_result[0] == 'success':
@@ -596,10 +604,8 @@ def handle_message(event):
             else:
                 send.send_text(fetch_result[0])
 
-        # 3. Check if lecturename is sent:
+        # 4. Check if lecturename is sent:
         else:
-            if db.isinDB(uid):
-                db.update_db(uid)
             fetch_result = db.get_query_result(received_message)
             if fetch_result[0] == 'success':
                 array = fetch_result[1]
