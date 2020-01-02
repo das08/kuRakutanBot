@@ -221,7 +221,25 @@ class DB:
             with conn.cursor() as cur:
                 try:
                     sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (uid, ))
+                    cur.execute(sqlStr, (uid,))
+                    return 'success'
+                except:
+                    print("Error: Cannnot update")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
+
+    def kakomon_wait_for_merge(self, received_message, uid):
+        dates = datetime.datetime.now()
+        search_id = received_message[2:7]
+        url = received_message[8:]
+
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
+                    cur.execute(sqlStr, (search_id, url, uid, dates))
                     return 'success'
                 except:
                     print("Error: Cannnot update")
@@ -313,7 +331,7 @@ class Prepare:
                 self.json_content.body.contents[0]['contents'][5]['contents'][1]['text'] = f"{value[0]}　"
                 self.json_content.body.contents[0]['contents'][5]['contents'][1]['color'] = f"{value[1]}"
                 break
-        # url modify
+        # modify url
         if array['url'] is not None:
             self.json_content.body.contents[0]['contents'][6]['contents'][1]['text'] = '〇'
             self.json_content.body.contents[0]['contents'][6]['contents'][1]['color'] = '#0fd142'
@@ -393,6 +411,16 @@ class Prepare:
         :return: Bool
         """
         if len(text) == 6 and (text[0] == "#" or text[0] == "＃") and text[1:5].isdigit():
+            return True
+
+    def isURL(self, text):
+        """
+        Checks if received text is in URL-format or not. Has to start and end with brackets and include sharp-id.
+        :param text: received_text
+        :return: Bool
+        """
+        if len(text) == 8 and text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[
+                                                                                                           2:7].isdigit():
             return True
 
     def isSet(self, value):
@@ -528,7 +556,7 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     token = event.reply_token
-    uid=event.source.user_id
+    uid = event.source.user_id
     received_message = event.message.text.strip()
 
     send = Send(token)
@@ -547,8 +575,19 @@ def handle_message(event):
         # 1.Check if reserved word is sent.
         response[received_message](token)
     else:
+
+        if prepare.isURL(received_message):
+            fetch_result = db.get_by_id(received_message[2:7])
+            if fetch_result[0] == 'success':
+                fetch_result = db.kakomon_wait_for_merge(received_message, uid)
+                if fetch_result[0] == 'success':
+                    send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+                else:
+                    send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
+            else:
+                send.send_text("指定された講義IDは存在しません。")
         # 2.Check if ID is sent:
-        if prepare.isID(received_message):
+        elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
             if fetch_result[0] == 'success':
                 array = fetch_result[1]
