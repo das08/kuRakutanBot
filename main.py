@@ -200,8 +200,8 @@ class DB:
         dates = datetime.datetime.now()
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
-        elif types == "count":
-            sqlStr = "INSERT INTO usertable (count) VALUES (%s)"
+        # elif types == "count":
+        #     sqlStr = "INSERT INTO usertable (count) VALUES (%s)"
         else:
             return "invalid types"
         with self.connect() as conn:
@@ -216,12 +216,16 @@ class DB:
                     if cur:
                         cur.close()
 
-    def update_count(self, uid):
+    def update_db(self, uid, value="", types=""):
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
-                    sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (uid,))
+                    if types == "count":
+                        sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
+                        cur.execute(sqlStr, (uid,))
+                    elif types == "theme":
+                        sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
+                        cur.execute(sqlStr, (value, uid))
                     return 'success'
                 except:
                     print("Error: Cannnot update")
@@ -498,7 +502,7 @@ class Send:
         """
         content = []
         page_count = 1
-        alt_text = "Place Holder"
+        alt_text = types
         max_page_count = len(json_content)
         for page in json_content:
             # setting up alt text
@@ -569,19 +573,23 @@ def handle_message(event):
         "help": fn.help,
         "Help": fn.help,
         "ヘルプ": fn.help,
+        "テーマ変更": fn.select_theme,
         "はんてい詳細": fn.rakutan_hantei,
-        "判定詳細": fn.rakutan_hantei
+        "判定詳細": fn.rakutan_hantei,
+        "@theme:default": fn.change_theme,
+        "@theme:yellow": fn.change_theme
     }
 
     check_user = db.isinDB(uid)
     if check_user[0]:
         # add 1 to search counter
-        db.update_count(uid)
+        db.update_db(uid, types='count')
     color_theme = check_user[1]
 
     if received_message in response:
+        lists = [uid, received_message]
         # 1.Check if reserved word is sent.
-        response[received_message](token)
+        response[received_message](token, lists)
     else:
         # 2.Check if kakomon URL is sent:
         if prepare.isURL(received_message):
