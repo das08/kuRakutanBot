@@ -1,0 +1,174 @@
+{
+  "type": "bubble",
+  "size": "kilo",
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "コマンド一覧",
+        "weight": "bold",
+        "size": "lg",
+        "align": "center",
+        "color": "#584D3D"
+      },
+      {
+        "type": "separator",
+        "margin": "sm"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "md",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・help",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1
+              },
+              {
+                "type": "text",
+                "text": "このメッセージです。",
+                "size": "sm",
+                "color": "#111111",
+                "align": "start",
+                "flex": 2
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・判定詳細",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1,
+                "gravity": "center"
+              },
+              {
+                "type": "text",
+                "text": "らくたん判定の詳細が確認できます。",
+                "size": "sm",
+                "color": "#111111",
+                "align": "start",
+                "flex": 2,
+                "wrap": true
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "（以下のコマンドは追加予定です）",
+                "size": "sm",
+                "align": "center",
+                "weight": "bold",
+                "flex": 1
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・おみくじ",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1,
+                "gravity": "center",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "text": "ランダムに楽単講義が表示されます。",
+                "size": "sm",
+                "color": "#aaaaaa",
+                "align": "start",
+                "flex": 2,
+                "wrap": true
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・CB",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1,
+                "gravity": "center",
+                "color": "#aaaaaa"
+              },
+              {
+                "type": "text",
+                "text": "ChotBetter掲載の講義が見れます。",
+                "size": "sm",
+                "color": "#aaaaaa",
+                "align": "start",
+                "flex": 2,
+                "wrap": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "footer": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "(Tips) %を頭に付けて検索すると部分一致検索になります。",
+        "wrap": true,
+        "size": "xs",
+        "color": "#9F956C"
+      },
+      {
+        "type": "text",
+        "text": "例えば「%電子工学」と検索すると「電気電子工学」もヒットします。",
+        "size": "xs",
+        "wrap": true,
+        "color": "#9F956C"
+      }
+    ]
+  },
+  "styles": {
+    "body": {
+      "backgroundColor": "#EBF38B"
+    },
+    "footer": {
+      "separator": true,
+      "backgroundColor": "#EBF38B"
+    }
+  }
+}
