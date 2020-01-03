@@ -404,7 +404,7 @@ class Prepare:
             url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
             url_provide_template['data'] += str(array['id'])
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['action'] = url_provide_template
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = '追加'
+            self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = '追加する'
 
         return [self.json_content]
 
@@ -603,7 +603,10 @@ class Send:
                 alt_text = f"「{page['header']['contents'][1]['text']}」のらくたん情報"
 
             # make it json format
-            page = json.dumps(page.to_dict())
+            try:
+                page = json.dumps(page.to_dict())
+            except:
+                page = json.dumps(page)
 
             flex_message = FlexSendMessage(
                 alt_text=alt_text,
