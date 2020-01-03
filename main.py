@@ -602,8 +602,8 @@ class Send:
                 # fetching lecturename from json_content
                 alt_text = f"「{page['header']['contents'][1]['text']}」のらくたん情報"
 
-            # make it json fotmat
-            page = str(page).replace("'", '"').replace("True", "true")
+            # make it json format
+            page = json.dumps(page.to_dict())
 
             flex_message = FlexSendMessage(
                 alt_text=alt_text,
@@ -674,7 +674,7 @@ def push_flex():
     result = db.get_merge_list()
 
     if result[0] != 'success':
-        line_bot_api.reply_message(
+        line_bot_api.push_message(
             "U97cd032cffb520dfa79de4c21cd94df5",
             TextSendMessage(text="[merge]db error:Could not fetch."),
         )
@@ -813,7 +813,7 @@ def handle_message(event):
     url = params.get('url')
 
     if types == 'url':
-        message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]"]
+        message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
         send.send_multiline_text(message_list)
 
     # for admin only #
