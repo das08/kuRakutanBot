@@ -1,12 +1,15 @@
 import func as fn
+# import response as res
 
 from flask import Flask, request, abort
 import os
-import datetime
 import json
+import datetime
 import math
+import copy
 import psycopg2
 import unicodedata
+import urllib
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -15,14 +18,12 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage
+    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent, Postback
 )
 
 app = Flask(__name__)
 
 # 環境変数取得
-# YOUR_CHANNEL_ACCESS_TOKEN = os.environ["YOUR_CHANNEL_ACCESS_TOKEN"]
-# YOUR_CHANNEL_SECRET = os.environ["YOUR_CHANNEL_SECRET"]
 CHANNEL_ACCESS_TOKEN = os.environ["CHANNEL_ACCESS_TOKEN"]
 CHANNEL_SECRET = os.environ["CHANNEL_SECRET"]
 db_host = os.environ["db_host"]
@@ -33,6 +34,7 @@ db_pass = os.environ["db_pass"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
+color_theme = ""
 
 
 class LoadJSON(object):
@@ -196,6 +198,42 @@ class DB:
                     if cur:
                         cur.close()
 
+    def get_merge_list(self):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = """
+                  SELECT
+                  search_id, url
+                  FROM urlmerge
+                  """
+                    cur.execute(sqlStr)
+                    results = cur.fetchall()
+
+                    lecture_name = []
+                    lecture_id = []
+                    lecture_url = []
+
+                    if len(results) > 0:
+                        mes = "success"
+                        for row in results:
+                            search_id = row[0]
+                            url = row[1]
+
+                            get_lecture = self.get_by_id(search_id)[1]['lecturename']
+                            lecture_id.append(search_id)
+                            lecture_name.append(get_lecture)
+                            lecture_url.append(url)
+                    else:
+                        mes = "error"
+
+                    return mes, lecture_id, lecture_name, lecture_url
+                except:
+                    return "DB接続エラーです", "exception"
+                finally:
+                    if cur:
+                        cur.close()
+
     def add_to_db(self, value, types):
         dates = datetime.datetime.now()
         if types == "uid":
@@ -226,6 +264,10 @@ class DB:
                     elif types == "theme":
                         sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
                         cur.execute(sqlStr, (value, uid))
+                    elif types == "url":
+                        sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
+                        cur.execute(sqlStr, (value, uid))
+                        print("merge ok")
                     return 'success'
                 except:
                     print("Error: Cannnot update")
@@ -234,10 +276,24 @@ class DB:
                     if cur:
                         cur.close()
 
+    def delete_db(self, search_id, url):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
+                    cur.execute(sqlStr, (search_id, url))
+                    return 'success'
+                except:
+                    print("Error: Cannnot delete")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
+
     def kakomon_wait_for_merge(self, received_message, uid):
         dates = datetime.datetime.now()
         search_id = received_message[2:7]
-        url = received_message[8:]
+        url = received_message[8:].strip()
 
         with self.connect() as conn:
             with conn.cursor() as cur:
@@ -280,7 +336,7 @@ class Prepare:
     Prepares json file for sending flex message.
     """
 
-    def __init__(self, received_message, token):
+    def __init__(self, received_message="", token=""):
         self.received_message = received_message
         self.token = token
         self.json_content = {}
@@ -343,6 +399,12 @@ class Prepare:
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['color'] = '#4c7cf5'
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['decoration'] = 'underline'
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['action']['uri'] = array['url']
+        else:
+            url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
+            url_provide_template['data'] += str(array['id'])
+            self.json_content.body.contents[0]['contents'][6]['contents'][2]['action'] = url_provide_template
+            self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = '追加'
+            self.json_content.body.contents[0]['contents'][6]['contents'][2]['color'] = '#000000'
 
         return [self.json_content]
 
@@ -425,6 +487,7 @@ class Prepare:
         :param text: received_text
         :return: Bool
         """
+        ###開業がなぜかバグる
         if text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[2:7].isdigit():
             return True
 
@@ -486,6 +549,25 @@ class Prepare:
                 count += 1
         return count
 
+    def merge_url(self, lecture_id, lecture_name, lecture_url):
+        f = open(f'./theme/default/merge.json', 'r', encoding='utf-8')
+        json_content = json.load(f)
+
+        chunk = []
+
+        for (lec_id, lec_name, lec_url) in zip(lecture_id, lecture_name, lecture_url):
+            socket = json_content['body']['contents'][0]
+            socket['contents'][1]['text'] = f"[#{lec_id}] {lec_name}"
+            socket['contents'][2]['text'] = lec_url
+            socket['contents'][2]['action']['uri'] = lec_url
+            socket['contents'][3]['contents'][0]['action']['data'] = f"type=merge&id={str(lec_id)}&url={lec_url}"
+            socket['contents'][3]['contents'][1]['action']['data'] = f"type=decline&id={str(lec_id)}&url={lec_url}"
+            chunk.append(copy.deepcopy(socket))
+
+        json_content['body']['contents'] = chunk
+
+        return json_content
+
 
 class Send:
     def __init__(self, token):
@@ -495,9 +577,9 @@ class Send:
         """
         Sends search result with flex message.
         json_content MUST BE LIST.
-        :param json_content: List
-        :param search_text: str
-        :param types:
+        :param json_content: List: flex template
+        :param search_text: str: ONLY for displaying search_result
+        :param types: str: switch alt text
         :return: Nothing
         """
         content = []
@@ -535,10 +617,73 @@ class Send:
             TextSendMessage(text=message),
         )
 
+    def send_multiline_text(self, message_list):
+        """
+        Sends multiline text.
+        :param message_list: List
+        :return: Nothing
+        """
+        message = []
+        for row in message_list:
+            mes = TextSendMessage(text=row)
+            message.append(mes)
+
+        line_bot_api.reply_message(
+            self.token,
+            messages=message
+        )
+
+    def push_flex(self, message_list):
+        f = open(f'./theme/default/hantei.json', 'r', encoding='utf-8')
+        json_content = json.load(f)
+
+        flex_message = FlexSendMessage(
+            alt_text="alt_text",
+            contents=json_content
+        )
+
+        line_bot_api.push_message(
+            "U97cd032cffb520dfa79de4c21cd94df5",
+            messages=flex_message
+        )
+
+    def push_text(self, message):
+        line_bot_api.push_message(
+            "U97cd032cffb520dfa79de4c21cd94df5",
+            TextSendMessage(text=message),
+        )
+
 
 @app.route("/")
 def hello_world():
     return "hello world!"
+
+
+@app.route("/wakeandpush")
+def push_flex():
+    prepare = Prepare()
+    db = DB()
+    result = db.get_merge_list()
+
+    if result[0] != 'success':
+        line_bot_api.reply_message(
+            "U97cd032cffb520dfa79de4c21cd94df5",
+            TextSendMessage(text="[merge]db error:Could not fetch."),
+        )
+    else:
+        lecture_id = result[1]
+        lecture_name = result[2]
+        lecture_url = result[3]
+        json_content = prepare.merge_url(lecture_id, lecture_name, lecture_url)
+        flex_message = FlexSendMessage(
+            alt_text="過去問提供URL確認",
+            contents=json_content
+        )
+        line_bot_api.push_message(
+            "U97cd032cffb520dfa79de4c21cd94df5",
+            messages=flex_message
+        )
+    return "end"
 
 
 @app.route("/callback", methods=['POST'])
@@ -569,13 +714,21 @@ def handle_message(event):
     db = DB()
     prepare = Prepare(received_message, token)
 
+    # load reserved word dict
+    # response = res.response
     response = {
         "help": fn.help,
         "Help": fn.help,
         "ヘルプ": fn.help,
         "テーマ変更": fn.select_theme,
+        "テーマ": fn.select_theme,
+        "色": fn.select_theme,
         "はんてい詳細": fn.rakutan_hantei,
+        "判定": fn.rakutan_hantei,
         "判定詳細": fn.rakutan_hantei,
+        "おみくじ": fn.say_sorry,
+        "CB": fn.say_sorry,
+        "d@s08": fn.merge,
         "@theme:default": fn.change_theme,
         "@theme:yellow": fn.change_theme
     }
@@ -587,7 +740,7 @@ def handle_message(event):
     color_theme = check_user[1]
 
     if received_message in response:
-        lists = [uid, received_message]
+        lists = [uid, received_message, color_theme]
         # 1.Check if reserved word is sent.
         response[received_message](token, lists)
     else:
@@ -633,6 +786,44 @@ def handle_message(event):
             # Send error message(s)
             else:
                 send.send_text(fetch_result[0])
+
+
+@handler.add(PostbackEvent)
+def handle_message(event):
+    token = event.reply_token
+    received_postback = event.postback.data
+    print(received_postback)
+    send = Send(token)
+    db = DB()
+
+    params = urllib.parse.parse_qs(received_postback)
+    types = params.get('type')[0]
+    search_id = params.get('id')[0]
+    url = params.get('url')
+
+    if types == 'url':
+        message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]"]
+        send.send_multiline_text(message_list)
+
+    # for admin only #
+    elif types == 'decline':
+        result = db.delete_db(search_id, url[0])
+        if result == 'success':
+            db.delete_db(search_id, url[0])
+            message = f"#[{search_id}] を削除しました。"
+        else:
+            message = f"#[{search_id}] の削除に失敗しました。"
+        send.push_text(message)
+
+    # for admin only #
+    elif types == 'merge':
+        result = db.update_db(search_id, url[0], "url")
+        if result == 'success':
+            db.delete_db(search_id, url[0])
+            message = f"#[{search_id}] をマージしました。"
+        else:
+            message = f"#[{search_id}] のマージに失敗しました。"
+        send.push_text(message)
 
 
 if __name__ == "__main__":
