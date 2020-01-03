@@ -3,6 +3,7 @@ import func as fn
 
 from flask import Flask, request, abort
 import os
+import re
 import json
 import datetime
 import math
@@ -404,7 +405,6 @@ class Prepare:
             url_provide_template['data'] += str(array['id'])
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['action'] = url_provide_template
             self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = '追加'
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['color'] = '#000000'
 
         return [self.json_content]
 
@@ -487,9 +487,15 @@ class Prepare:
         :param text: received_text
         :return: Bool
         """
-        ###開業がなぜかバグる
+        pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
+        url = text[8:].split()
+
         if text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[2:7].isdigit():
-            return True
+            # check if is in correct url-format.
+            if re.match(pattern, url):
+                return True
+            else:
+                return False
 
     def isSet(self, value):
         """
