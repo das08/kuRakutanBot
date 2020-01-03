@@ -481,21 +481,23 @@ class Prepare:
         if len(text) == 6 and (text[0] == "#" or text[0] == "＃") and text[1:5].isdigit():
             return True
 
-    def isURL(self, text):
+    def isURLID(self, text):
         """
-        Checks if received text is in URL-format or not. Has to start and end with brackets and include sharp-id.
+        Checks if received text is in URLID-format or not. Has to start and end with brackets and include sharp-id.
         :param text: received_text
         :return: Bool
         """
-        pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
-        url = text[8:].split()
-
         if text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[2:7].isdigit():
-            # check if is in correct url-format.
-            if re.match(pattern, url):
-                return True
-            else:
-                return False
+            return True
+
+    def isURL(self, text):
+        pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
+        url = text[8:].strip()
+        # check if is in correct url-format.
+        if re.match(pattern, url):
+            return True
+        else:
+            return False
 
     def isSet(self, value):
         """
@@ -751,16 +753,19 @@ def handle_message(event):
         response[received_message](token, lists)
     else:
         # 2.Check if kakomon URL is sent:
-        if prepare.isURL(received_message):
-            fetch_result = db.get_by_id(received_message[2:7])
-            if fetch_result[0] == 'success':
-                fetch_result = db.kakomon_wait_for_merge(received_message, uid)
-                if fetch_result == 'success':
-                    send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+        if prepare.isURLID(received_message):
+            if prepare.isURL(received_message):
+                fetch_result = db.get_by_id(received_message[2:7])
+                if fetch_result[0] == 'success':
+                    fetch_result = db.kakomon_wait_for_merge(received_message, uid)
+                    if fetch_result == 'success':
+                        send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+                    else:
+                        send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
                 else:
-                    send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
+                    send.send_text("指定された講義IDは存在しません。")
             else:
-                send.send_text("指定された講義IDは存在しません。")
+                send.send_text("過去問リンクはhttp://　または　https://から始まるものを入力してください。")
         # 3.Check if ID is sent:
         elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
