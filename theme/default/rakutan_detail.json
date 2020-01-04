@@ -225,7 +225,7 @@
                 "text": "過去問",
                 "size": "sm",
                 "color": "#555555",
-                "flex": 8
+                "flex": 6
               },
               {
                 "type": "text",
@@ -236,12 +236,12 @@
               },
               {
                 "type": "text",
-                "text": "未確認",
+                "text": "追加する",
                 "size": "sm",
                 "align": "end",
                 "flex": 2,
-                "color": "#aaaaaa",
-                "decoration": "none",
+                "color": "#777777",
+                "decoration": "underline",
                 "action": {
                   "type": "uri",
                   "label": "action",

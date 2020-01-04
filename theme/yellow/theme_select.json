@@ -1,0 +1,209 @@
+{
+  "type": "bubble",
+  "size": "kilo",
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "色テーマの選択",
+        "size": "lg",
+        "flex": 0,
+        "weight": "bold",
+        "align": "center"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "xxl",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "デフォルト",
+                "size": "sm",
+                "color": "#555555",
+                "flex": 10,
+                "wrap": true
+              },
+              {
+                "type": "text",
+                "text": "選択中",
+                "size": "md",
+                "color": "#4c7cf5",
+                "align": "end",
+                "weight": "bold",
+                "decoration": "underline",
+                "margin": "none",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "@theme:default"
+                },
+                "offsetBottom": "3px",
+                "flex": 5
+              }
+            ],
+            "margin": "lg"
+          }
+        ]
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "xxl",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "プリンイエロー",
+                "size": "sm",
+                "color": "#555555",
+                "flex": 10,
+                "wrap": true
+              },
+              {
+                "type": "text",
+                "text": "選択",
+                "size": "md",
+                "color": "#4c7cf5",
+                "align": "end",
+                "weight": "bold",
+                "decoration": "underline",
+                "margin": "none",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "@theme:yellow"
+                },
+                "offsetBottom": "3px",
+                "flex": 2
+              }
+            ],
+            "margin": "lg"
+          }
+        ]
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "xxl",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "シルバー",
+                "size": "sm",
+                "color": "#aaaaaa",
+                "flex": 10,
+                "wrap": true
+              },
+              {
+                "type": "text",
+                "text": "選択",
+                "size": "md",
+                "color": "#a7b9e5",
+                "align": "end",
+                "weight": "bold",
+                "decoration": "underline",
+                "margin": "none",
+                "action": {
+                  "type": "postback",
+                  "label": "action",
+                  "data": "type=url&id=14421"
+                },
+                "offsetBottom": "3px",
+                "flex": 2
+              }
+            ],
+            "margin": "lg"
+          }
+        ]
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "margin": "xxl",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "text",
+                "text": "ゴールド",
+                "size": "sm",
+                "color": "#aaaaaa",
+                "flex": 10,
+                "wrap": true
+              },
+              {
+                "type": "text",
+                "text": "選択",
+                "size": "md",
+                "color": "#a7b9e5",
+                "align": "end",
+                "weight": "bold",
+                "decoration": "underline",
+                "margin": "none",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "#123456"
+                },
+                "offsetBottom": "3px",
+                "flex": 2
+              }
+            ],
+            "margin": "lg"
+          }
+        ]
+      },
+      {
+        "type": "separator",
+        "margin": "xxl"
+      },
+      {
+        "type": "box",
+        "layout": "horizontal",
+        "margin": "md",
+        "contents": [
+          {
+            "type": "text",
+            "text": "※前方一致するものを表示しています。",
+            "size": "xs",
+            "color": "#aaaaaa",
+            "flex": 0
+          }
+        ]
+      }
+    ]
+  },
+  "styles": {
+    "header": {
+      "backgroundColor": "#3C3C3A"
+    },
+    "body": {
+      "backgroundColor": "#F4F3F9"
+    },
+    "footer": {
+      "separator": true,
+      "backgroundColor": "#E7E8E3",
+      "separatorColor": "#D6D6D4"
+    }
+  }
+}

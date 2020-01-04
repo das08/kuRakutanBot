@@ -217,7 +217,7 @@
                 "type": "text",
                 "text": "過去問",
                 "size": "sm",
-                "flex": 8
+                "flex": 6
               },
               {
                 "type": "text",

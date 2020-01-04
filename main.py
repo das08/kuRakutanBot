@@ -1,5 +1,6 @@
-import func as fn
+# import func as fn
 # import response as res
+import module
 
 from flask import Flask, request, abort
 import os
@@ -726,23 +727,23 @@ def handle_message(event):
     prepare = Prepare(received_message, token)
 
     # load reserved word dict
-    # response = res.response
-    response = {
-        "help": fn.help,
-        "Help": fn.help,
-        "ヘルプ": fn.help,
-        "テーマ変更": fn.select_theme,
-        "テーマ": fn.select_theme,
-        "色": fn.select_theme,
-        "はんてい詳細": fn.rakutan_hantei,
-        "判定": fn.rakutan_hantei,
-        "判定詳細": fn.rakutan_hantei,
-        "おみくじ": fn.say_sorry,
-        "CB": fn.say_sorry,
-        "d@s08": fn.merge,
-        "@theme:default": fn.change_theme,
-        "@theme:yellow": fn.change_theme
-    }
+    response = module.response.response
+    # response = {
+    #     "help": fn.helps,
+    #     "Help": fn.helps,
+    #     "ヘルプ": fn.helps,
+    #     "テーマ変更": fn.select_theme,
+    #     "テーマ": fn.select_theme,
+    #     "色": fn.select_theme,
+    #     "はんてい詳細": fn.rakutan_hantei,
+    #     "判定": fn.rakutan_hantei,
+    #     "判定詳細": fn.rakutan_hantei,
+    #     "おみくじ": fn.say_sorry,
+    #     "CB": fn.say_sorry,
+    #     "d@s08": fn.merge,
+    #     "@theme:default": fn.change_theme,
+    #     "@theme:yellow": fn.change_theme
+    # }
 
     check_user = db.isinDB(uid)
     if check_user[0]:
@@ -768,7 +769,7 @@ def handle_message(event):
                 else:
                     send.send_text("指定された講義IDは存在しません。")
             else:
-                send.send_text("過去問リンクはhttp://　または　https://から始まるものを入力してください。")
+                send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
         # 3.Check if ID is sent:
         elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
@@ -834,9 +835,9 @@ def handle_message(event):
         result = db.update_db(search_id, url[0], "url")
         if result == 'success':
             db.delete_db(search_id, url[0])
-            message = f"#[{search_id}] をマージしました。"
+            message = f"[#{search_id}] をマージしました。"
         else:
-            message = f"#[{search_id}] のマージに失敗しました。"
+            message = f"[#{search_id}] のマージに失敗しました。"
         send.push_text(message)
 
 

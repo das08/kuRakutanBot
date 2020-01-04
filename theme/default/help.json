@@ -24,7 +24,7 @@
         "contents": [
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -33,7 +33,12 @@
                 "size": "sm",
                 "align": "start",
                 "weight": "bold",
-                "flex": 1
+                "flex": 1,
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "help"
+                }
               },
               {
                 "type": "text",
@@ -41,13 +46,13 @@
                 "size": "sm",
                 "color": "#111111",
                 "align": "start",
-                "flex": 2
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -57,7 +62,12 @@
                 "align": "start",
                 "weight": "bold",
                 "flex": 1,
-                "gravity": "center"
+                "gravity": "center",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "判定詳細"
+                }
               },
               {
                 "type": "text",
@@ -66,7 +76,65 @@
                 "color": "#111111",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・(講義名)",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1,
+                "gravity": "center"
+              },
+              {
+                "type": "text",
+                "text": "単位取得率、過去問が確認できます。",
+                "size": "sm",
+                "color": "#111111",
+                "align": "start",
+                "flex": 2,
+                "wrap": true,
+                "offsetStart": "12px"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "vertical",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "・テーマ変更",
+                "size": "sm",
+                "align": "start",
+                "weight": "bold",
+                "flex": 1,
+                "gravity": "center",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "テーマ変更"
+                }
+              },
+              {
+                "type": "text",
+                "text": "色テーマを変更できます。",
+                "size": "sm",
+                "color": "#111111",
+                "align": "start",
+                "flex": 2,
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
@@ -81,13 +149,14 @@
                 "size": "sm",
                 "align": "center",
                 "weight": "bold",
-                "flex": 1
+                "flex": 1,
+                "decoration": "underline"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -98,7 +167,12 @@
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#aaaaaa"
+                "color": "#aaaaaa",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "おみくじ"
+                }
               },
               {
                 "type": "text",
@@ -107,13 +181,14 @@
                 "color": "#aaaaaa",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -124,7 +199,12 @@
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#aaaaaa"
+                "color": "#aaaaaa",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "CB"
+                }
               },
               {
                 "type": "text",
@@ -133,7 +213,8 @@
                 "color": "#aaaaaa",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           }
@@ -149,13 +230,15 @@
         "type": "text",
         "text": "(Tips) %を頭に付けて検索すると部分一致検索になります。",
         "wrap": true,
-        "size": "xs"
+        "size": "xs",
+        "color": "#aaaaaa"
       },
       {
         "type": "text",
         "text": "例えば「%電子工学」と検索すると「電気電子工学」もヒットします。",
         "size": "xs",
-        "wrap": true
+        "wrap": true,
+        "color": "#aaaaaa"
       }
     ]
   },
