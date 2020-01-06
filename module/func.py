@@ -88,9 +88,10 @@ def say_sorry2(token, lists):
 
 def show_version(token, lists):
     send = ap.Send(token)
-    # version_info = "京大楽単bot\n【Version】 2.0.1\n【SourceCode】https://github.com"
-    version_info = "京大楽単bot\n【Version】 2.0.1"
-    send.send_text(version_info)
+    f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
+    json_content = [json.load(f)]
+    send.send_result(json_content, "京大楽単bot", "京大楽単bot")
+    return
 
 
 def merge(token, lists):
