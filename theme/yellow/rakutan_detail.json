@@ -12,25 +12,26 @@
             "type": "text",
             "text": "Search ID:#12345",
             "weight": "bold",
-            "color": "#01E550",
+            "color": "#F4E87C",
             "size": "sm",
             "flex": 5
           },
           {
             "type": "text",
-            "text": " ",
-            "color": "#ff7e41",
+            "text": "　",
+            "color": "#fed136",
             "size": "xs",
             "weight": "bold",
+            "offsetStart": "10px",
             "flex": 2
           },
           {
             "type": "text",
-            "text": " ",
-            "color": "#fed136",
+            "text": "おみくじ結果",
             "size": "xs",
             "weight": "bold",
-            "flex": 3
+            "flex": 3,
+            "color": "#584D3D"
           }
         ]
       },
@@ -54,7 +55,7 @@
             "type": "text",
             "text": "開講部局",
             "size": "xs",
-            "color": "#81817F",
+            "color": "#9F956C",
             "align": "start",
             "flex": 1,
             "weight": "bold"
@@ -79,7 +80,7 @@
             "type": "text",
             "text": "群",
             "size": "xs",
-            "color": "#81817F",
+            "color": "#9F956C",
             "weight": "bold"
           },
           {
@@ -93,7 +94,7 @@
             "type": "text",
             "text": "単位数",
             "size": "xs",
-            "color": "#81817F",
+            "color": "#9F956C",
             "weight": "bold"
           },
           {
@@ -133,7 +134,7 @@
                 "type": "text",
                 "text": "単位取得率",
                 "size": "xxs",
-                "color": "#aaaaaa",
+                "color": "#9F956C",
                 "flex": 0
               }
             ]
@@ -146,14 +147,12 @@
                 "type": "text",
                 "text": "2018年度",
                 "size": "sm",
-                "color": "#555555",
                 "flex": 0
               },
               {
                 "type": "text",
                 "text": "0%",
                 "size": "sm",
-                "color": "#111111",
                 "align": "end"
               }
             ]
@@ -166,14 +165,12 @@
                 "type": "text",
                 "text": "2017年度",
                 "size": "sm",
-                "color": "#555555",
                 "flex": 0
               },
               {
                 "type": "text",
                 "text": "0%",
                 "size": "sm",
-                "color": "#111111",
                 "align": "end"
               }
             ]
@@ -186,21 +183,20 @@
                 "type": "text",
                 "text": "2016年度",
                 "size": "sm",
-                "color": "#555555",
                 "flex": 0
               },
               {
                 "type": "text",
                 "text": "0%",
                 "size": "sm",
-                "color": "#111111",
                 "align": "end"
               }
             ]
           },
           {
             "type": "separator",
-            "margin": "xxl"
+            "margin": "xxl",
+            "color": "#9F956C"
           },
           {
             "type": "box",
@@ -210,8 +206,7 @@
               {
                 "type": "text",
                 "text": "らくたん判定",
-                "size": "sm",
-                "color": "#555555"
+                "size": "sm"
               },
               {
                 "type": "text",
@@ -233,7 +228,6 @@
                 "type": "text",
                 "text": "過去問",
                 "size": "sm",
-                "color": "#555555",
                 "flex": 6
               },
               {
@@ -245,11 +239,11 @@
               },
               {
                 "type": "text",
-                "text": "追加する",
+                "text": "未確認",
                 "size": "sm",
                 "align": "end",
                 "flex": 2,
-                "color": "#777777",
+                "color": "#9F956C",
                 "decoration": "underline",
                 "action": {
                   "type": "uri",
@@ -263,7 +257,8 @@
       },
       {
         "type": "separator",
-        "margin": "xxl"
+        "margin": "xxl",
+        "color": "#9F956C"
       },
       {
         "type": "box",
@@ -274,7 +269,7 @@
             "type": "text",
             "text": "※単位取得率は「各授業の平均学生在籍数」をもとに表示しています。",
             "size": "xxs",
-            "color": "#aaaaaa",
+            "color": "#9F956C",
             "flex": 0,
             "wrap": true
           },
@@ -282,7 +277,7 @@
             "type": "text",
             "text": "※らくたん判定は単位取得率をもとに判定しています。詳しくは「判定詳細」と送信してください。",
             "size": "xxs",
-            "color": "#aaaaaa",
+            "color": "#9F956C",
             "flex": 0,
             "wrap": true
           }
@@ -292,10 +287,10 @@
   },
   "styles": {
     "header": {
-      "backgroundColor": "#3C3C3A"
+      "backgroundColor": "#584D3D"
     },
     "body": {
-      "backgroundColor": "#F4F3F9"
+      "backgroundColor": "#EBF38B"
     },
     "footer": {
       "separator": true,

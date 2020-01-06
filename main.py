@@ -367,6 +367,7 @@ class Prepare:
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
+        :param omikuji:
         :param array: lecture data from db
         :param color: FOR fn.omikuji
         :return: json_content
@@ -391,12 +392,11 @@ class Prepare:
         if omikuji == "normal":
             self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
             self.json_content.header.contents[0]['contents'][1]['color'] = "#ff7e41"
+            self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
         elif omikuji == "oni":
             self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
             self.json_content.header.contents[0]['contents'][1]['color'] = "#6d7bff"
-        # else:
-        #     self.json_content.header.contents[0]['contents'][1]['color'] = "#3C3C3A"
-        #     self.json_content.header.contents[0]['contents'][2]['color'] = "#3C3C3A"
+            self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
 
         # adjust font size if long
         length = self.lecturename_len(array['lecturename'])

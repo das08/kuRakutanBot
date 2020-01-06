@@ -26,8 +26,8 @@
           },
           {
             "type": "text",
-            "text": " ",
-            "color": "#fed136",
+            "text": "おみくじ結果",
+            "color": "#3C3C3A",
             "size": "xs",
             "weight": "bold",
             "flex": 3
