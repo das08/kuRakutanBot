@@ -22,7 +22,8 @@
             "color": "#ff7e41",
             "size": "xs",
             "weight": "bold",
-            "flex": 2
+            "flex": 2,
+            "offsetStart": "10px"
           },
           {
             "type": "text",

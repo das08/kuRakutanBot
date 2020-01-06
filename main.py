@@ -394,7 +394,7 @@ class Prepare:
             self.json_content.header.contents[0]['contents'][1]['color'] = "#ff7e41"
             self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
         elif omikuji == "oni":
-            self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
+            self.json_content.header.contents[0]['contents'][1]['text'] = "【鬼単】"
             self.json_content.header.contents[0]['contents'][1]['color'] = "#6d7bff"
             self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
 
@@ -610,7 +610,7 @@ class Prepare:
         :param lecture_url: str *MUST start with http:// or https://
         :return: json_content
         """
-        f = open(f'./theme/default/merge.json', 'r', encoding='utf-8')
+        f = open(f'./theme/etc/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
         chunk = []
