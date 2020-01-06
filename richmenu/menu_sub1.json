@@ -1,0 +1,53 @@
+//{
+//    "richMenuId": "richmenu-6a89b3c8d143c0c656b7c469d230dfa5"
+//}
+
+{
+    "size":{
+        "width":2500,
+        "height":1686
+    },
+    "selected":false,
+    "name":"main menu",
+    "chatBarText":"メニュー",
+    "areas":[
+        {
+          "bounds":{
+              "x":0,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"京大楽単bot"
+          }
+        },
+        {
+          "bounds":{
+              "x":833,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"おみくじ"
+          }
+        },
+        {
+          "bounds":{
+              "x":1667,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"ヘルプ"
+          }
+        }
+
+
+    ]
+  }

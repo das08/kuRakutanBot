@@ -236,12 +236,27 @@ class DB:
                     if cur:
                         cur.close()
 
+    def get_omikuji(self):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
+                    cur.execute(sqlStr)
+                    results = cur.fetchall()
+
+                    for row in results:
+                        omikuji_id = row[0]
+                    return 'success', omikuji_id
+                except:
+                    return "DB接続エラーです", "exception"
+                finally:
+                    if cur:
+                        cur.close()
+
     def add_to_db(self, value, types):
         dates = datetime.datetime.now()
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
-        # elif types == "count":
-        #     sqlStr = "INSERT INTO usertable (count) VALUES (%s)"
         else:
             return "invalid types"
         with self.connect() as conn:
@@ -344,15 +359,19 @@ class Prepare:
         self.json_content = {}
         self.json_contents = []
 
-    def rakutan_detail(self, array):
+    def rakutan_detail(self, array, color=""):
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
         :param array: lecture data from db
+        :param color: FOR fn.omikuji
         :return: json_content
         """
+        if color != "":
+            f = open(f'./theme/{color}/rakutan_detail.json', 'r', encoding='utf-8')
+        else:
+            f = open(f'./theme/{color_theme}/rakutan_detail.json', 'r', encoding='utf-8')
         # load template
-        f = open(f'./theme/{color_theme}/rakutan_detail.json', 'r', encoding='utf-8')
 
         data = json.dumps(json.load(f))
         self.json_content = LoadJSON(data)
@@ -492,9 +511,15 @@ class Prepare:
             return True
 
     def isURL(self, text):
+        """
+        Checks if received text is in URL-format or not. Has to start with http:// or https://.
+        :param text: received_text
+        :return: Bool
+        """
+        # regex for judging URL format.
         pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
         url = text[8:].strip()
-        # check if is in correct url-format.
+        # judge if is in correct url-format.
         if re.match(pattern, url):
             return True
         else:
@@ -529,7 +554,7 @@ class Prepare:
         :param total: int
         :return: int percent
         """
-        if accepted == 0 or total == 0:
+        if total == 0:
             return '---'
         else:
             return round(100 * accepted / total, 1)
@@ -538,7 +563,7 @@ class Prepare:
         """
         Returns percentage for judging rakurtan.
         Priority: prev -> prev2 -> prev3
-        :param array: lecture data from db
+        :param array: list lecture data from db
         :return: int percent
         """
         if array['total_prev'] != 0:
@@ -550,15 +575,27 @@ class Prepare:
         return percent
 
     def lecturename_len(self, text):
-        count = 0
+        """
+        Find length of lecturename.
+        :param text: str lecturename
+        :return: int length
+        """
+        length = 0
         for c in text:
             if unicodedata.east_asian_width(c) in 'FWA':
-                count += 2
+                length += 2
             else:
-                count += 1
-        return count
+                length += 1
+        return length
 
     def merge_url(self, lecture_id, lecture_name, lecture_url):
+        """
+        For ADMIN. Prepares flex message for merging/declining kakomon url.
+        :param lecture_id: int
+        :param lecture_name: str
+        :param lecture_url: str *MUST start with http:// or https://
+        :return: json_content
+        """
         f = open(f'./theme/default/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
@@ -602,6 +639,8 @@ class Send:
             elif types == "rakutan_detail":
                 # fetching lecturename from json_content
                 alt_text = f"「{page['header']['contents'][1]['text']}」のらくたん情報"
+            elif types == "omikuji":
+                alt_text = search_text
 
             # make it json format
             try:
@@ -726,33 +765,19 @@ def handle_message(event):
     db = DB()
     prepare = Prepare(received_message, token)
 
-    # load reserved word dict
-    response = module.response.response
-    # response = {
-    #     "help": fn.helps,
-    #     "Help": fn.helps,
-    #     "ヘルプ": fn.helps,
-    #     "テーマ変更": fn.select_theme,
-    #     "テーマ": fn.select_theme,
-    #     "色": fn.select_theme,
-    #     "はんてい詳細": fn.rakutan_hantei,
-    #     "判定": fn.rakutan_hantei,
-    #     "判定詳細": fn.rakutan_hantei,
-    #     "おみくじ": fn.say_sorry,
-    #     "CB": fn.say_sorry,
-    #     "d@s08": fn.merge,
-    #     "@theme:default": fn.change_theme,
-    #     "@theme:yellow": fn.change_theme
-    # }
-
     check_user = db.isinDB(uid)
     if check_user[0]:
         # add 1 to search counter
         db.update_db(uid, types='count')
     color_theme = check_user[1]
 
+    # load reserved word dict
+    response = module.response.response
+
     if received_message in response:
+        # prepare params to pass
         lists = [uid, received_message, color_theme]
+
         # 1.Check if reserved word is sent.
         response[received_message](token, lists)
     else:
@@ -770,6 +795,7 @@ def handle_message(event):
                     send.send_text("指定された講義IDは存在しません。")
             else:
                 send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
+
         # 3.Check if ID is sent:
         elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
@@ -786,7 +812,7 @@ def handle_message(event):
             if fetch_result[0] == 'success':
                 array = fetch_result[1]
                 record_count = len(array['id'])
-                # if query result is :
+                # if query result is 1:
                 if record_count == 1:
                     array = prepare.list_to_str(array)
                     json_content = prepare.rakutan_detail(array)
@@ -807,7 +833,6 @@ def handle_message(event):
 def handle_message(event):
     token = event.reply_token
     received_postback = event.postback.data
-    print(received_postback)
     send = Send(token)
     db = DB()
 

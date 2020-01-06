@@ -33,9 +33,9 @@
               },
               {
                 "type": "text",
-                "text": "選択中",
+                "text": "選択",
                 "size": "md",
-                "color": "#4c7cf5",
+                "color": "#D17A22",
                 "align": "end",
                 "weight": "bold",
                 "decoration": "underline",
@@ -75,7 +75,7 @@
                 "type": "text",
                 "text": "選択",
                 "size": "md",
-                "color": "#4c7cf5",
+                "color": "#D17A22",
                 "align": "end",
                 "weight": "bold",
                 "decoration": "underline",
@@ -105,9 +105,9 @@
             "contents": [
               {
                 "type": "text",
-                "text": "シルバー",
+                "text": "オーシャンブルー",
                 "size": "sm",
-                "color": "#aaaaaa",
+                "color": "#9F956C",
                 "flex": 10,
                 "wrap": true
               },
@@ -115,15 +115,15 @@
                 "type": "text",
                 "text": "選択",
                 "size": "md",
-                "color": "#a7b9e5",
+                "color": "#e3a769",
                 "align": "end",
                 "weight": "bold",
                 "decoration": "underline",
                 "margin": "none",
                 "action": {
-                  "type": "postback",
+                  "type": "message",
                   "label": "action",
-                  "data": "type=url&id=14421"
+                  "text": "@theme:blue"
                 },
                 "offsetBottom": "3px",
                 "flex": 2
@@ -147,7 +147,7 @@
                 "type": "text",
                 "text": "ゴールド",
                 "size": "sm",
-                "color": "#aaaaaa",
+                "color": "#9F956C",
                 "flex": 10,
                 "wrap": true
               },
@@ -155,7 +155,7 @@
                 "type": "text",
                 "text": "選択",
                 "size": "md",
-                "color": "#a7b9e5",
+                "color": "#e3a769",
                 "align": "end",
                 "weight": "bold",
                 "decoration": "underline",
@@ -163,7 +163,7 @@
                 "action": {
                   "type": "message",
                   "label": "action",
-                  "text": "#123456"
+                  "text": "@theme:gold"
                 },
                 "offsetBottom": "3px",
                 "flex": 2
@@ -176,20 +176,6 @@
       {
         "type": "separator",
         "margin": "xxl"
-      },
-      {
-        "type": "box",
-        "layout": "horizontal",
-        "margin": "md",
-        "contents": [
-          {
-            "type": "text",
-            "text": "※前方一致するものを表示しています。",
-            "size": "xs",
-            "color": "#aaaaaa",
-            "flex": 0
-          }
-        ]
       }
     ]
   },
@@ -198,7 +184,7 @@
       "backgroundColor": "#3C3C3A"
     },
     "body": {
-      "backgroundColor": "#F4F3F9"
+      "backgroundColor": "#EBF38B"
     },
     "footer": {
       "separator": true,

@@ -242,12 +242,16 @@
     ]
   },
   "styles": {
+    "header": {
+      "separatorColor": "#9F956C"
+    },
     "body": {
       "backgroundColor": "#EBF38B"
     },
     "footer": {
       "separator": true,
-      "backgroundColor": "#EBF38B"
+      "backgroundColor": "#EBF38B",
+      "separatorColor": "#9F956C"
     }
   }
 }

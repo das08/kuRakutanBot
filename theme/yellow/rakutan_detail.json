@@ -185,7 +185,8 @@
           },
           {
             "type": "separator",
-            "margin": "xxl"
+            "margin": "xxl",
+            "color": "#9F956C"
           },
           {
             "type": "box",
@@ -233,7 +234,7 @@
                 "align": "end",
                 "flex": 2,
                 "color": "#9F956C",
-                "decoration": "none",
+                "decoration": "underline",
                 "action": {
                   "type": "uri",
                   "label": "action",
@@ -246,7 +247,8 @@
       },
       {
         "type": "separator",
-        "margin": "xxl"
+        "margin": "xxl",
+        "color": "#9F956C"
       },
       {
         "type": "box",

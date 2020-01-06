@@ -10,8 +10,7 @@
         "text": "コマンド一覧",
         "weight": "bold",
         "size": "lg",
-        "align": "center",
-        "color": "#584D3D"
+        "align": "center"
       },
       {
         "type": "separator",
@@ -25,7 +24,7 @@
         "contents": [
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -34,7 +33,12 @@
                 "size": "sm",
                 "align": "start",
                 "weight": "bold",
-                "flex": 1
+                "flex": 1,
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "help"
+                }
               },
               {
                 "type": "text",
@@ -42,13 +46,13 @@
                 "size": "sm",
                 "color": "#111111",
                 "align": "start",
-                "flex": 2
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -58,7 +62,12 @@
                 "align": "start",
                 "weight": "bold",
                 "flex": 1,
-                "gravity": "center"
+                "gravity": "center",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "判定詳細"
+                }
               },
               {
                 "type": "text",
@@ -67,18 +76,19 @@
                 "color": "#111111",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
                 "type": "text",
-                "text": "・（講義名）",
+                "text": "・(講義名)",
                 "size": "sm",
                 "align": "start",
                 "weight": "bold",
@@ -92,23 +102,29 @@
                 "color": "#111111",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
                 "type": "text",
                 "text": "・テーマ変更",
-                "size": "xs",
+                "size": "sm",
                 "align": "start",
                 "weight": "bold",
                 "flex": 1,
-                "gravity": "center"
+                "gravity": "center",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "テーマ変更"
+                }
               },
               {
                 "type": "text",
@@ -117,7 +133,8 @@
                 "color": "#111111",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
@@ -132,13 +149,14 @@
                 "size": "sm",
                 "align": "center",
                 "weight": "bold",
-                "flex": 1
+                "flex": 1,
+                "decoration": "underline"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -149,22 +167,28 @@
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#aaaaaa"
+                "color": "#9F956C",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "おみくじ"
+                }
               },
               {
                 "type": "text",
                 "text": "ランダムに楽単講義が表示されます。",
                 "size": "sm",
-                "color": "#aaaaaa",
+                "color": "#9F956C",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           },
           {
             "type": "box",
-            "layout": "horizontal",
+            "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
@@ -175,16 +199,22 @@
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#aaaaaa"
+                "color": "#9F956C",
+                "action": {
+                  "type": "message",
+                  "label": "action",
+                  "text": "CB"
+                }
               },
               {
                 "type": "text",
                 "text": "ChotBetter掲載の講義が見れます。",
                 "size": "sm",
-                "color": "#aaaaaa",
+                "color": "#9F956C",
                 "align": "start",
                 "flex": 2,
-                "wrap": true
+                "wrap": true,
+                "offsetStart": "12px"
               }
             ]
           }
@@ -213,12 +243,16 @@
     ]
   },
   "styles": {
+    "header": {
+      "separatorColor": "#9F956C"
+    },
     "body": {
       "backgroundColor": "#EBF38B"
     },
     "footer": {
       "separator": true,
-      "backgroundColor": "#EBF38B"
+      "backgroundColor": "#EBF38B",
+      "separatorColor": "#9F956C"
     }
   }
 }

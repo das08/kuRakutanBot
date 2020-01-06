@@ -20,6 +20,25 @@ def rakutan_hantei(token, lists):
     return
 
 
+def omikuji(token, lists):
+    send = ap.Send(token)
+    db = ap.DB()
+    prepare = ap.Prepare()
+
+    fetch_omikuji = db.get_omikuji()
+
+    if fetch_omikuji[0] == "success":
+        fetch_result = db.get_by_id(fetch_omikuji[1])
+        if fetch_result[0] == 'success':
+            array = fetch_result[1]
+            json_content = prepare.rakutan_detail(array, lists[2])
+            send.send_result(json_content, 'おみくじ結果', 'omikuji')
+        else:
+            send.send_text(fetch_result[0])
+    else:
+        send.send_text("おみくじに失敗しました。もう一度引いてください。")
+
+
 def select_theme(token, lists):
     send = ap.Send(token)
     color_theme = lists[2]
@@ -42,6 +61,12 @@ def say_sorry(token, lists):
     send = ap.Send(token)
 
     send.send_text("申し訳ありません。現在この機能はご利用いただけません。")
+
+
+def say_sorry2(token, lists):
+    send = ap.Send(token)
+
+    send.send_text("このテーマはゴールドユーザー専用です。")
 
 
 def merge(token, lists):

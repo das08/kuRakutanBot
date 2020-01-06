@@ -10,9 +10,11 @@ response = {
     "はんてい詳細": fn.rakutan_hantei,
     "判定": fn.rakutan_hantei,
     "判定詳細": fn.rakutan_hantei,
-    "おみくじ": fn.say_sorry,
+    "おみくじ": fn.omikuji,
     "CB": fn.say_sorry,
     "d@s08": fn.merge,
     "@theme:default": fn.change_theme,
-    "@theme:yellow": fn.change_theme
+    "@theme:yellow": fn.change_theme,
+    "@theme:blue": fn.say_sorry,
+    "@theme:gold": fn.say_sorry2
 }

@@ -83,7 +83,8 @@
       },
       {
         "type": "separator",
-        "margin": "xxl"
+        "margin": "xxl",
+        "color": "#9F956C"
       },
       {
         "type": "box",
