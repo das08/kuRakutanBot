@@ -28,6 +28,7 @@ app = Flask(__name__)
 # 環境変数取得
 CHANNEL_ACCESS_TOKEN = os.environ["CHANNEL_ACCESS_TOKEN"]
 CHANNEL_SECRET = os.environ["CHANNEL_SECRET"]
+ADMIN_UID = os.environ["ADMIN_UID"]
 db_host = os.environ["db_host"]
 db_port = os.environ["db_port"]
 db_name = os.environ["db_name"]
@@ -236,11 +237,14 @@ class DB:
                     if cur:
                         cur.close()
 
-    def get_omikuji(self):
+    def get_omikuji(self, types):
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
-                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
+                    if types == "normal":
+                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
+                    else:
+                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev < 0.21 *total_prev) order by random() limit 1"
                     cur.execute(sqlStr)
                     results = cur.fetchall()
 
@@ -684,23 +688,23 @@ class Send:
             messages=message
         )
 
-    def push_flex(self, message_list):
-        f = open(f'./theme/default/hantei.json', 'r', encoding='utf-8')
-        json_content = json.load(f)
-
-        flex_message = FlexSendMessage(
-            alt_text="alt_text",
-            contents=json_content
-        )
-
-        line_bot_api.push_message(
-            "U97cd032cffb520dfa79de4c21cd94df5",
-            messages=flex_message
-        )
+    # def push_flex(self, message_list):
+    #     f = open(f'./theme/default/hantei.json', 'r', encoding='utf-8')
+    #     json_content = json.load(f)
+    #
+    #     flex_message = FlexSendMessage(
+    #         alt_text="alt_text",
+    #         contents=json_content
+    #     )
+    #
+    #     line_bot_api.push_message(
+    #         ADMIN_UID,
+    #         messages=flex_message
+    #     )
 
     def push_text(self, message):
         line_bot_api.push_message(
-            "U97cd032cffb520dfa79de4c21cd94df5",
+            ADMIN_UID,
             TextSendMessage(text=message),
         )
 
@@ -718,7 +722,7 @@ def push_flex():
 
     if result[0] != 'success':
         line_bot_api.push_message(
-            "U97cd032cffb520dfa79de4c21cd94df5",
+            ADMIN_UID,
             TextSendMessage(text="[merge]db error:Could not fetch."),
         )
     else:
@@ -731,7 +735,7 @@ def push_flex():
             contents=json_content
         )
         line_bot_api.push_message(
-            "U97cd032cffb520dfa79de4c21cd94df5",
+            ADMIN_UID,
             messages=flex_message
         )
     return "end"
@@ -771,8 +775,8 @@ def handle_message(event):
         db.update_db(uid, types='count')
     color_theme = check_user[1]
 
-    # load reserved word dict
-    response = module.response.response
+    # load reserved command dict
+    response = module.response.command
 
     if received_message in response:
         # prepare params to pass

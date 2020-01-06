@@ -25,14 +25,33 @@ def omikuji(token, lists):
     db = ap.DB()
     prepare = ap.Prepare()
 
-    fetch_omikuji = db.get_omikuji()
+    fetch_omikuji = db.get_omikuji('normal')
 
     if fetch_omikuji[0] == "success":
         fetch_result = db.get_by_id(fetch_omikuji[1])
         if fetch_result[0] == 'success':
             array = fetch_result[1]
             json_content = prepare.rakutan_detail(array, lists[2])
-            send.send_result(json_content, 'おみくじ結果', 'omikuji')
+            send.send_result(json_content, '楽単おみくじ結果', 'omikuji')
+        else:
+            send.send_text(fetch_result[0])
+    else:
+        send.send_text("おみくじに失敗しました。もう一度引いてください。")
+
+
+def onitan(token, lists):
+    send = ap.Send(token)
+    db = ap.DB()
+    prepare = ap.Prepare()
+
+    fetch_omikuji = db.get_omikuji('oni')
+
+    if fetch_omikuji[0] == "success":
+        fetch_result = db.get_by_id(fetch_omikuji[1])
+        if fetch_result[0] == 'success':
+            array = fetch_result[1]
+            json_content = prepare.rakutan_detail(array, lists[2])
+            send.send_result(json_content, '鬼単おみくじ結果', 'omikuji')
         else:
             send.send_text(fetch_result[0])
     else:
@@ -59,14 +78,19 @@ def change_theme(token, lists):
 
 def say_sorry(token, lists):
     send = ap.Send(token)
-
     send.send_text("申し訳ありません。現在この機能はご利用いただけません。")
 
 
 def say_sorry2(token, lists):
     send = ap.Send(token)
+    send.send_text("このテーマはゴールドユーザー限定です。")
 
-    send.send_text("このテーマはゴールドユーザー専用です。")
+
+def show_version(token, lists):
+    send = ap.Send(token)
+    # version_info = "京大楽単bot\n【Version】 2.0.1\n【SourceCode】https://github.com"
+    version_info = "京大楽単bot\n【Version】 2.0.1"
+    send.send_text(version_info)
 
 
 def merge(token, lists):
