@@ -14,7 +14,8 @@
       },
       {
         "type": "separator",
-        "margin": "sm"
+        "margin": "sm",
+        "color": "#9F956C"
       },
       {
         "type": "box",
@@ -140,22 +141,6 @@
           },
           {
             "type": "box",
-            "layout": "horizontal",
-            "margin": "xs",
-            "contents": [
-              {
-                "type": "text",
-                "text": "（以下のコマンドは追加予定です）",
-                "size": "sm",
-                "align": "center",
-                "weight": "bold",
-                "flex": 1,
-                "decoration": "underline"
-              }
-            ]
-          },
-          {
-            "type": "box",
             "layout": "vertical",
             "margin": "xs",
             "contents": [
@@ -167,7 +152,6 @@
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#9F956C",
                 "action": {
                   "type": "message",
                   "label": "action",
@@ -178,11 +162,26 @@
                 "type": "text",
                 "text": "ランダムに楽単講義が表示されます。",
                 "size": "sm",
-                "color": "#9F956C",
                 "align": "start",
                 "flex": 2,
                 "wrap": true,
                 "offsetStart": "12px"
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "margin": "xs",
+            "contents": [
+              {
+                "type": "text",
+                "text": "（以下のコマンドは追加予定です）",
+                "size": "sm",
+                "align": "center",
+                "weight": "bold",
+                "flex": 1,
+                "decoration": "underline"
               }
             ]
           },
@@ -243,9 +242,6 @@
     ]
   },
   "styles": {
-    "header": {
-      "separatorColor": "#9F956C"
-    },
     "body": {
       "backgroundColor": "#EBF38B"
     },

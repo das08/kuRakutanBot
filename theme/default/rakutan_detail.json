@@ -13,15 +13,24 @@
             "text": "Search ID:#12345",
             "weight": "bold",
             "color": "#01E550",
-            "size": "sm"
+            "size": "sm",
+            "flex": 5
           },
           {
             "type": "text",
-            "text": "ChotBetter掲載！",
+            "text": " ",
+            "color": "#ff7e41",
+            "size": "xs",
+            "weight": "bold",
+            "flex": 2
+          },
+          {
+            "type": "text",
+            "text": " ",
             "color": "#fed136",
             "size": "xs",
             "weight": "bold",
-            "offsetStart": "10px"
+            "flex": 3
           }
         ]
       },

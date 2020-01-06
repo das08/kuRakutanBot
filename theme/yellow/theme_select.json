@@ -14,6 +14,11 @@
         "align": "center"
       },
       {
+        "type": "separator",
+        "margin": "sm",
+        "color": "#9F956C"
+      },
+      {
         "type": "box",
         "layout": "vertical",
         "margin": "xxl",
@@ -172,10 +177,6 @@
             "margin": "lg"
           }
         ]
-      },
-      {
-        "type": "separator",
-        "margin": "xxl"
       }
     ]
   },

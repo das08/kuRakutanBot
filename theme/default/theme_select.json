@@ -14,6 +14,10 @@
         "align": "center"
       },
       {
+        "type": "separator",
+        "margin": "sm"
+      },
+      {
         "type": "box",
         "layout": "vertical",
         "margin": "xxl",
@@ -172,10 +176,6 @@
             "margin": "lg"
           }
         ]
-      },
-      {
-        "type": "separator",
-        "margin": "xxl"
       }
     ]
   },

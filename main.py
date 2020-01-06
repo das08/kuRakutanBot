@@ -244,7 +244,7 @@ class DB:
                     if types == "normal":
                         sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
                     else:
-                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev < 0.21 *total_prev) order by random() limit 1"
+                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
                     cur.execute(sqlStr)
                     results = cur.fetchall()
 
@@ -363,7 +363,7 @@ class Prepare:
         self.json_content = {}
         self.json_contents = []
 
-    def rakutan_detail(self, array, color=""):
+    def rakutan_detail(self, array, color="", omikuji=""):
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
@@ -381,13 +381,23 @@ class Prepare:
         self.json_content = LoadJSON(data)
 
         # modify header
-        # self.json_content.header.contents[0]['text'] = f"Search ID: #{array['id']}"
         self.json_content.header.contents[0]['contents'][0]['text'] = f"Search ID: #{array['id']}"
-        self.json_content.header.contents[0]['contents'][1]['color'] = "#3C3C3A"
         self.json_content.header.contents[1]['text'] = f"{array['lecturename']}"
         self.json_content.header.contents[3]['contents'][1]['text'] = f"{array['facultyname']}"
         self.json_content.header.contents[4]['contents'][1]['text'] = f"{self.isSet(array['groups'])}"
         self.json_content.header.contents[4]['contents'][3]['text'] = f"{self.isSet(array['credits'])}"
+
+        # for omikuji
+        if omikuji == "normal":
+            self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
+            self.json_content.header.contents[0]['contents'][1]['color'] = "#ff7e41"
+        elif omikuji == "oni":
+            self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
+            self.json_content.header.contents[0]['contents'][1]['color'] = "#6d7bff"
+        # else:
+        #     self.json_content.header.contents[0]['contents'][1]['color'] = "#3C3C3A"
+        #     self.json_content.header.contents[0]['contents'][2]['color'] = "#3C3C3A"
+
         # adjust font size if long
         length = self.lecturename_len(array['lecturename'])
         if length > 24:

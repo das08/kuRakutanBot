@@ -15,7 +15,8 @@
       },
       {
         "type": "separator",
-        "margin": "sm"
+        "margin": "sm",
+        "color": "#9F956C"
       },
       {
         "type": "box",
