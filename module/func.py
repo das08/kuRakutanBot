@@ -31,7 +31,7 @@ def omikuji(token, lists):
         fetch_result = db.get_by_id(fetch_omikuji[1])
         if fetch_result[0] == 'success':
             array = fetch_result[1]
-            json_content = prepare.rakutan_detail(array, lists[2])
+            json_content = prepare.rakutan_detail(array, lists[2], "normal")
             send.send_result(json_content, '楽単おみくじ結果', 'omikuji')
         else:
             send.send_text(fetch_result[0])
@@ -50,7 +50,7 @@ def onitan(token, lists):
         fetch_result = db.get_by_id(fetch_omikuji[1])
         if fetch_result[0] == 'success':
             array = fetch_result[1]
-            json_content = prepare.rakutan_detail(array, lists[2])
+            json_content = prepare.rakutan_detail(array, lists[2], "oni")
             send.send_result(json_content, '鬼単おみくじ結果', 'omikuji')
         else:
             send.send_text(fetch_result[0])
