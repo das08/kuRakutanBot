@@ -1,5 +1,5 @@
-# import func as fn
-# import response as res
+import sys
+
 import module
 
 from flask import Flask, request, abort
@@ -151,6 +151,7 @@ class DB:
                     return mes, rakutan_data
 
                 except:
+                    stderr(f"[error]get-by-id:Cannot #{search_id}")
                     return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
                 finally:
                     if cur:
@@ -196,6 +197,7 @@ class DB:
 
                     return mes, rakutan_data
                 except:
+                    stderr(f"[error]get-query-result:Cannot {search_word}")
                     return "DB接続エラーです", "exception"
                 finally:
                     if cur:
@@ -252,6 +254,7 @@ class DB:
                         omikuji_id = row[0]
                     return 'success', omikuji_id
                 except:
+                    stderr("[error]omikuji:Cannot get omikuji.")
                     return "DB接続エラーです", "exception"
                 finally:
                     if cur:
@@ -269,7 +272,7 @@ class DB:
                     cur.execute(sqlStr, (value, dates))
                     return 'success'
                 except:
-                    print("Error: Cannnot add")
+                    stderr("[error]addDB:Cannnot add to usertable.")
                     return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
                 finally:
                     if cur:
@@ -291,7 +294,7 @@ class DB:
                         print("merge ok")
                     return 'success'
                 except:
-                    print("Error: Cannnot update")
+                    stderr(f"[error]updateDB:Cannnot update [{types}].")
                     return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
                 finally:
                     if cur:
@@ -305,7 +308,7 @@ class DB:
                     cur.execute(sqlStr, (search_id, url))
                     return 'success'
                 except:
-                    print("Error: Cannnot delete")
+                    stderr("[error]deleteDB:Cannnot delete urlmarge.")
                     return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
                 finally:
                     if cur:
@@ -323,7 +326,7 @@ class DB:
                     cur.execute(sqlStr, (search_id, url, uid, dates))
                     return 'success'
                 except:
-                    print("Error: Cannnot update")
+                    stderr("[error]kakomon-merge:Cannot insert.")
                     return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
                 finally:
                     if cur:
@@ -344,7 +347,7 @@ class DB:
 
                     return True, color_theme
                 except:
-                    print("Error: Cannnot isin")
+                    stderr("[error]isinDB:Cannnot isin")
                     color_theme = "default"
                     return False, color_theme
                 finally:
@@ -698,25 +701,16 @@ class Send:
             messages=message
         )
 
-    # def push_flex(self, message_list):
-    #     f = open(f'./theme/default/hantei.json', 'r', encoding='utf-8')
-    #     json_content = json.load(f)
-    #
-    #     flex_message = FlexSendMessage(
-    #         alt_text="alt_text",
-    #         contents=json_content
-    #     )
-    #
-    #     line_bot_api.push_message(
-    #         ADMIN_UID,
-    #         messages=flex_message
-    #     )
-
     def push_text(self, message):
         line_bot_api.push_message(
             ADMIN_UID,
             TextSendMessage(text=message),
         )
+
+
+def stderr(err_message):
+    print(err_message)
+    sys.stdout.flush()
 
 
 @app.route("/")
@@ -731,10 +725,11 @@ def push_flex():
     result = db.get_merge_list()
 
     if result[0] != 'success':
-        line_bot_api.push_message(
-            ADMIN_UID,
-            TextSendMessage(text="[merge]db error:Could not fetch."),
-        )
+        # line_bot_api.push_message(
+        #     ADMIN_UID,
+        #     TextSendMessage(text="[merge]db error:Could not fetch."),
+        # )
+        pass
     else:
         lecture_id = result[1]
         lecture_name = result[2]
@@ -864,10 +859,14 @@ def handle_message(event):
         result = db.delete_db(search_id, url[0])
         if result == 'success':
             db.delete_db(search_id, url[0])
-            message = f"#[{search_id}] を削除しました。"
+            message = f"[#{search_id}] を削除しました。"
         else:
-            message = f"#[{search_id}] の削除に失敗しました。"
+            message = f"[#{search_id}] の削除に失敗しました。"
         send.push_text(message)
+    elif types == "icon":
+        f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
+        json_content = [json.load(f)]
+        send.send_result(json_content, "京大楽単bot", "京大楽単bot")
 
     # for admin only #
     elif types == 'merge':
