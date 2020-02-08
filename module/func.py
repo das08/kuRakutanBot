@@ -76,6 +76,21 @@ def change_theme(token, lists):
     send.send_text("カラーテーマを変更しました！")
 
 
+def inquiry(token, lists):
+    send = ap.Send(token)
+    color_theme = lists[2]
+    f = open(f'./theme/etc/inquiry.json', 'r', encoding='utf-8')
+    json_content = [json.load(f)]
+    send.send_result(json_content, "お問い合わせ", "お問い合わせ")
+    return
+
+
+def my_uid(token, lists):
+    send = ap.Send(token)
+    uid = lists[0]
+    send.send_text(f"Your uid: {uid}")
+
+
 def say_sorry(token, lists):
     send = ap.Send(token)
     send.send_text("申し訳ありません。現在この機能はご利用いただけません。")
@@ -96,3 +111,19 @@ def show_version(token, lists):
 
 def merge(token, lists):
     ap.push_flex()
+
+
+def set_menu(token, lists):
+    send = ap.Send(token)
+    uid = lists[0]
+    menu = lists[1][5:]
+    text = "リッチメニューを変更しました。"
+
+    if menu == 'birdman':
+        menu_id = "richmenu-fb2161dd36ae54baf01b17158eb22ca5"
+        text += "\n@set:defaultで元に戻せます。"
+    else:
+        menu_id = "richmenu-66a5b2117176dfd7d98055e2b6c85aed"
+
+    ap.line_bot_api.link_rich_menu_to_user(uid, menu_id)
+    send.send_text(text)

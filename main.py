@@ -1,9 +1,8 @@
-import sys
-
 import module
 
 from flask import Flask, request, abort
 import os
+import sys
 import re
 import json
 import datetime
@@ -180,7 +179,7 @@ class DB:
                     if len(results) > 0:
                         mes = "success"
                     else:
-                        mes = f"「{search_word}」は見つかりませんでした。\n(Tips) %を頭に付けて検索すると部分一致検索になります。"
+                        mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
 
                     rakutan_data['id'] = [row[0] for row in results]
                     rakutan_data['facultyname'] = [row[1] for row in results]
@@ -207,11 +206,7 @@ class DB:
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
-                    sqlStr = """
-                  SELECT
-                  search_id, url
-                  FROM urlmerge
-                  """
+                    sqlStr = "SELECT search_id, url FROM urlmerge"
                     cur.execute(sqlStr)
                     results = cur.fetchall()
 
@@ -234,6 +229,7 @@ class DB:
 
                     return mes, lecture_id, lecture_name, lecture_url
                 except:
+                    stderr("[error]fetch-merge-list:Cannot fetch from DB")
                     return "DB接続エラーです", "exception"
                 finally:
                     if cur:
@@ -252,6 +248,8 @@ class DB:
 
                     for row in results:
                         omikuji_id = row[0]
+                    # test function
+                    stderr(f"[success]omikuji:Omikuji {types}!")
                     return 'success', omikuji_id
                 except:
                     stderr("[error]omikuji:Cannot get omikuji.")
@@ -279,6 +277,7 @@ class DB:
                         cur.close()
 
     def update_db(self, uid, value="", types=""):
+        dates = datetime.datetime.now()
         with self.connect() as conn:
             with conn.cursor() as cur:
                 try:
@@ -291,7 +290,6 @@ class DB:
                     elif types == "url":
                         sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
                         cur.execute(sqlStr, (value, uid))
-                        print("merge ok")
                     return 'success'
                 except:
                     stderr(f"[error]updateDB:Cannnot update [{types}].")
@@ -344,10 +342,11 @@ class DB:
                         color_theme = results[0][1]
                     else:
                         self.add_to_db(uid, "uid")
+                        color_theme = "default"
 
                     return True, color_theme
                 except:
-                    stderr("[error]isinDB:Cannnot isin")
+                    stderr(f"[error]isinDB:Cannnot isin {uid}")
                     color_theme = "default"
                     return False, color_theme
                 finally:
@@ -616,6 +615,7 @@ class Prepare:
         f = open(f'./theme/etc/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
+        # store all rows
         chunk = []
 
         for (lec_id, lec_name, lec_url) in zip(lecture_id, lecture_name, lecture_url):
@@ -724,13 +724,7 @@ def push_flex():
     db = DB()
     result = db.get_merge_list()
 
-    if result[0] != 'success':
-        # line_bot_api.push_message(
-        #     ADMIN_UID,
-        #     TextSendMessage(text="[merge]db error:Could not fetch."),
-        # )
-        pass
-    else:
+    if result[0] == 'success':
         lecture_id = result[1]
         lecture_name = result[2]
         lecture_url = result[3]
@@ -763,12 +757,14 @@ def callback():
     return 'OK'
 
 
+# Handle Text message
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     global color_theme
+
     token = event.reply_token
     uid = event.source.user_id
-    received_message = event.message.text.strip()
+    received_message = event.message.text.strip().replace('％', '%')
 
     send = Send(token)
     db = DB()
@@ -809,6 +805,7 @@ def handle_message(event):
         elif prepare.isID(received_message):
             fetch_result = db.get_by_id(received_message[1:6])
             if fetch_result[0] == 'success':
+                # get lectureinfo list
                 array = fetch_result[1]
                 json_content = prepare.rakutan_detail(array)
                 send.send_result(json_content, received_message, 'rakutan_detail')
@@ -818,6 +815,7 @@ def handle_message(event):
         # 4. Check if lecturename is sent:
         else:
             fetch_result = db.get_query_result(received_message)
+            stderr(f"[success]{uid}: {received_message}")
             if fetch_result[0] == 'success':
                 array = fetch_result[1]
                 record_count = len(array['id'])
@@ -838,6 +836,7 @@ def handle_message(event):
                 send.send_text(fetch_result[0])
 
 
+# Handle Postback message
 @handler.add(PostbackEvent)
 def handle_message(event):
     token = event.reply_token
@@ -850,9 +849,16 @@ def handle_message(event):
     search_id = params.get('id')[0]
     url = params.get('url')
 
+    # send template for sending kakomon url
     if types == 'url':
         message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
         send.send_multiline_text(message_list)
+
+    # send small bubble
+    elif types == "icon":
+        f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
+        json_content = [json.load(f)]
+        send.send_result(json_content, "京大楽単bot", "京大楽単bot")
 
     # for admin only #
     elif types == 'decline':
@@ -863,10 +869,6 @@ def handle_message(event):
         else:
             message = f"[#{search_id}] の削除に失敗しました。"
         send.push_text(message)
-    elif types == "icon":
-        f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
-        json_content = [json.load(f)]
-        send.send_result(json_content, "京大楽単bot", "京大楽単bot")
 
     # for admin only #
     elif types == 'merge':

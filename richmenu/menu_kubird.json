@@ -1,0 +1,53 @@
+//{
+//    "richMenuId": "richmenu-fb2161dd36ae54baf01b17158eb22ca5"
+//}
+
+{
+    "size":{
+        "width":2500,
+        "height":1686
+    },
+    "selected":false,
+    "name":"kubird menu",
+    "chatBarText":"メニュー",
+    "areas":[
+        {
+          "bounds":{
+              "x":0,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"京大楽単bot"
+          }
+        },
+        {
+          "bounds":{
+              "x":833,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"おみくじ"
+          }
+        },
+        {
+          "bounds":{
+              "x":1667,
+              "y":843,
+              "width":832,
+              "height":842
+          },
+          "action":{
+              "type":"message",
+              "text":"ヘルプ"
+          }
+        }
+
+
+    ]
+  }
