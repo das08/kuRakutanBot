@@ -110,240 +110,248 @@ class DB:
         dsn = "host={} port={} dbname={} user={} password={}".format(db_host, db_port, db_name, db_user, db_pass)
         return psycopg2.connect(dsn)
 
-    def get_by_id(self, conn, search_id):
+    def get_by_id(self, search_id):
         """
         Get lecture data that matches lecture id from database.
         :param search_id: int
         :return: Single lecture data
         """
-        with conn.cursor() as cur:
-            try:
-                sqlStr = """
-              SELECT
-              id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
-              FROM rakutan
-              WHERE (id) = (%s)
-              """
-                cur.execute(sqlStr, (int(search_id),))
-                results = cur.fetchall()
-                rakutan_data = {}
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = """
+                  SELECT
+                  id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
+                  FROM rakutan
+                  WHERE (id) = (%s)
+                  """
+                    cur.execute(sqlStr, (int(search_id),))
+                    results = cur.fetchall()
+                    rakutan_data = {}
 
-                if len(results) > 0:
-                    mes = "success"
-                else:
-                    mes = "そのIDは存在しません。"
+                    if len(results) > 0:
+                        mes = "success"
+                    else:
+                        mes = "そのIDは存在しません。"
 
-                for row in results:
-                    rakutan_data['id'] = row[0]
-                    rakutan_data['facultyname'] = row[1]
-                    rakutan_data['lecturename'] = row[2]
-                    rakutan_data['groups'] = row[3]
-                    rakutan_data['credits'] = row[4]
-                    rakutan_data['total_prev'] = row[5]
-                    rakutan_data['accept_prev'] = row[6]
-                    rakutan_data['total_prev2'] = row[7]
-                    rakutan_data['accept_prev2'] = row[8]
-                    rakutan_data['total_prev3'] = row[9]
-                    rakutan_data['accept_prev3'] = row[10]
-                    rakutan_data['url'] = row[11]
-                return mes, rakutan_data
+                    for row in results:
+                        rakutan_data['id'] = row[0]
+                        rakutan_data['facultyname'] = row[1]
+                        rakutan_data['lecturename'] = row[2]
+                        rakutan_data['groups'] = row[3]
+                        rakutan_data['credits'] = row[4]
+                        rakutan_data['total_prev'] = row[5]
+                        rakutan_data['accept_prev'] = row[6]
+                        rakutan_data['total_prev2'] = row[7]
+                        rakutan_data['accept_prev2'] = row[8]
+                        rakutan_data['total_prev3'] = row[9]
+                        rakutan_data['accept_prev3'] = row[10]
+                        rakutan_data['url'] = row[11]
+                    return mes, rakutan_data
 
-            except:
-                stderr(f"[error]get-by-id:Cannot #{search_id}")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+                except:
+                    stderr(f"[error]get-by-id:Cannot #{search_id}")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-    def get_query_result(self, conn, search_word):
+    def get_query_result(self, search_word):
         """
         Get lecture list that matches search_word from database.
         Default: forward match
         :param search_word: str
         :return: List of lecture data
         """
-        with conn.cursor() as cur:
-            try:
-                sqlStr = """
-              SELECT
-              id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
-              FROM rakutan
-              WHERE (lecturename) ILIKE (%s)
-              """
-                cur.execute(sqlStr, (search_word + "%",))
-                results = cur.fetchall()
-                rakutan_data = {}
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = """
+                  SELECT
+                  id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
+                  FROM rakutan
+                  WHERE (lecturename) ILIKE (%s)
+                  """
+                    cur.execute(sqlStr, (search_word + "%",))
+                    results = cur.fetchall()
+                    rakutan_data = {}
 
-                if len(results) > 0:
-                    mes = "success"
-                else:
-                    mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+                    if len(results) > 0:
+                        mes = "success"
+                    else:
+                        mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
 
-                rakutan_data['id'] = [row[0] for row in results]
-                rakutan_data['facultyname'] = [row[1] for row in results]
-                rakutan_data['lecturename'] = [row[2] for row in results]
-                rakutan_data['groups'] = [row[3] for row in results]
-                rakutan_data['credits'] = [row[4] for row in results]
-                rakutan_data['total_prev'] = [row[5] for row in results]
-                rakutan_data['accept_prev'] = [row[6] for row in results]
-                rakutan_data['total_prev2'] = [row[7] for row in results]
-                rakutan_data['accept_prev2'] = [row[8] for row in results]
-                rakutan_data['total_prev3'] = [row[9] for row in results]
-                rakutan_data['accept_prev3'] = [row[10] for row in results]
-                rakutan_data['url'] = [row[11] for row in results]
+                    rakutan_data['id'] = [row[0] for row in results]
+                    rakutan_data['facultyname'] = [row[1] for row in results]
+                    rakutan_data['lecturename'] = [row[2] for row in results]
+                    rakutan_data['groups'] = [row[3] for row in results]
+                    rakutan_data['credits'] = [row[4] for row in results]
+                    rakutan_data['total_prev'] = [row[5] for row in results]
+                    rakutan_data['accept_prev'] = [row[6] for row in results]
+                    rakutan_data['total_prev2'] = [row[7] for row in results]
+                    rakutan_data['accept_prev2'] = [row[8] for row in results]
+                    rakutan_data['total_prev3'] = [row[9] for row in results]
+                    rakutan_data['accept_prev3'] = [row[10] for row in results]
+                    rakutan_data['url'] = [row[11] for row in results]
 
-                return mes, rakutan_data
-            except:
-                stderr(f"[error]get-query-result:Cannot {search_word}")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
+                    return mes, rakutan_data
+                except:
+                    stderr(f"[error]get-query-result:Cannot {search_word}")
+                    return "DB接続エラーです", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-    def get_merge_list(self, conn):
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "SELECT search_id, url FROM urlmerge"
-                cur.execute(sqlStr)
-                results = cur.fetchall()
+    def get_merge_list(self):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "SELECT search_id, url FROM urlmerge"
+                    cur.execute(sqlStr)
+                    results = cur.fetchall()
 
-                lecture_name = []
-                lecture_id = []
-                lecture_url = []
+                    lecture_name = []
+                    lecture_id = []
+                    lecture_url = []
 
-                if len(results) > 0:
-                    mes = "success"
+                    if len(results) > 0:
+                        mes = "success"
+                        for row in results:
+                            search_id = row[0]
+                            url = row[1]
+
+                            get_lecture = self.get_by_id(search_id)[1]['lecturename']
+                            lecture_id.append(search_id)
+                            lecture_name.append(get_lecture)
+                            lecture_url.append(url)
+                    else:
+                        mes = "error"
+
+                    return mes, lecture_id, lecture_name, lecture_url
+                except:
+                    stderr("[error]fetch-merge-list:Cannot fetch from DB")
+                    return "DB接続エラーです", "exception"
+                finally:
+                    if cur:
+                        cur.close()
+
+    def get_omikuji(self, types):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    if types == "normal":
+                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
+                    else:
+                        sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
+                    cur.execute(sqlStr)
+                    results = cur.fetchall()
+
                     for row in results:
-                        search_id = row[0]
-                        url = row[1]
+                        omikuji_id = row[0]
+                    # test function
+                    stderr(f"[success]omikuji:Omikuji {types}!")
+                    return 'success', omikuji_id
+                except:
+                    stderr("[error]omikuji:Cannot get omikuji.")
+                    return "DB接続エラーです", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-                        get_lecture = self.get_by_id(conn, search_id)[1]['lecturename']
-                        lecture_id.append(search_id)
-                        lecture_name.append(get_lecture)
-                        lecture_url.append(url)
-                else:
-                    mes = "error"
-
-                return mes, lecture_id, lecture_name, lecture_url
-            except:
-                stderr("[error]fetch-merge-list:Cannot fetch from DB")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
-
-    def get_omikuji(self, conn, types):
-        with conn.cursor() as cur:
-            try:
-                if types == "normal":
-                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
-                else:
-                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
-                cur.execute(sqlStr)
-                results = cur.fetchall()
-
-                for row in results:
-                    omikuji_id = row[0]
-                # test function
-                stderr(f"[success]omikuji:Omikuji {types}!")
-                return 'success', omikuji_id
-            except:
-                stderr("[error]omikuji:Cannot get omikuji.")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
-
-    def add_to_db(self, conn, value, types):
+    def add_to_db(self, value, types):
         dates = datetime.datetime.now()
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
         else:
             return "invalid types"
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    cur.execute(sqlStr, (value, dates))
+                    return 'success'
+                except:
+                    stderr("[error]addDB:Cannnot add to usertable.")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-        with conn.cursor() as cur:
-            try:
-                cur.execute(sqlStr, (value, dates))
-                return 'success'
-            except:
-                stderr("[error]addDB:Cannnot add to usertable.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
-
-    def update_db(self, conn, id, value="", types=""):
+    def update_db(self, uid, value="", types=""):
         dates = datetime.datetime.now()
-        with conn.cursor() as cur:
-            try:
-                if types == "count":
-                    sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (uid,))
-                elif types == "theme":
-                    sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (value, uid))
-                elif types == "url":
-                    sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
-                    cur.execute(sqlStr, (value, uid))
-                return 'success'
-            except:
-                stderr(f"[error]updateDB:Cannnot update [{types}].")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    if types == "count":
+                        sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
+                        cur.execute(sqlStr, (uid,))
+                    elif types == "theme":
+                        sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
+                        cur.execute(sqlStr, (value, uid))
+                    elif types == "url":
+                        sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
+                        cur.execute(sqlStr, (value, uid))
+                    return 'success'
+                except:
+                    stderr(f"[error]updateDB:Cannnot update [{types}].")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-    def delete_db(self, conn, search_id, url):
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
-                cur.execute(sqlStr, (search_id, url))
-                return 'success'
-            except:
-                stderr("[error]deleteDB:Cannnot delete urlmarge.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+    def delete_db(self, search_id, url):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
+                    cur.execute(sqlStr, (search_id, url))
+                    return 'success'
+                except:
+                    stderr("[error]deleteDB:Cannnot delete urlmarge.")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-    def kakomon_wait_for_merge(self, conn, received_message, uid):
+    def kakomon_wait_for_merge(self, received_message, uid):
         dates = datetime.datetime.now()
         search_id = received_message[2:7]
         url = received_message[8:].strip()
 
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
-                cur.execute(sqlStr, (search_id, url, uid, dates))
-                return 'success'
-            except:
-                stderr("[error]kakomon-merge:Cannot insert.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
+                    cur.execute(sqlStr, (search_id, url, uid, dates))
+                    return 'success'
+                except:
+                    stderr("[error]kakomon-merge:Cannot insert.")
+                    return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+                finally:
+                    if cur:
+                        cur.close()
 
-    def isinDB(self, conn, uid):
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
-                cur.execute(sqlStr, (uid,))
-                results = cur.fetchall()
+    def isinDB(self, uid):
+        with self.connect() as conn:
+            with conn.cursor() as cur:
+                try:
+                    sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
+                    cur.execute(sqlStr, (uid,))
+                    results = cur.fetchall()
 
-                if len(results) > 0:
-                    color_theme = results[0][1]
-                else:
-                    self.add_to_db(conn, uid, "uid")
+                    if len(results) > 0:
+                        color_theme = results[0][1]
+                    else:
+                        self.add_to_db(uid, "uid")
+                        color_theme = "default"
+
+                    return True, color_theme
+                except:
+                    stderr(f"[error]isinDB:Cannnot isin {uid}")
                     color_theme = "default"
-
-                return True, color_theme
-            except:
-                stderr(f"[error]isinDB:Cannnot isin {uid}")
-                color_theme = "default"
-                return False, color_theme
-            finally:
-                if cur:
-                    cur.close()
+                    return False, color_theme
+                finally:
+                    if cur:
+                        cur.close()
 
 
 class Prepare:
@@ -719,8 +727,7 @@ def hello_world():
 def push_flex():
     prepare = Prepare()
     db = DB()
-    with db.connect() as conn:
-        result = db.get_merge_list(conn)
+    result = db.get_merge_list()
 
     if result[0] == 'success':
         lecture_id = result[1]
@@ -768,71 +775,70 @@ def handle_message(event):
     db = DB()
     prepare = Prepare(received_message, token)
 
-    with db.connect() as conn:
-        check_user = db.isinDB(conn, uid)
-        if check_user[0]:
-            # add 1 to search counter
-            db.update_db(conn, uid, types='count')
-        color_theme = check_user[1]
+    check_user = db.isinDB(uid)
+    if check_user[0]:
+        # add 1 to search counter
+        db.update_db(uid, types='count')
+    color_theme = check_user[1]
 
-        # load reserved command dict
-        response = module.response.command
+    # load reserved command dict
+    response = module.response.command
 
-        if received_message in response:
-            # prepare params to pass
-            lists = [uid, received_message, color_theme]
+    if received_message in response:
+        # prepare params to pass
+        lists = [uid, received_message, color_theme]
 
-            # 1.Check if reserved word is sent.
-            response[received_message](token, lists)
-        else:
-            # 2.Check if kakomon URL is sent:
-            if prepare.isURLID(received_message):
-                if prepare.isURL(received_message):
-                    fetch_result = db.get_by_id(conn, received_message[2:7])
-                    if fetch_result[0] == 'success':
-                        fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
-                        if fetch_result == 'success':
-                            send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
-                        else:
-                            send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
-                    else:
-                        send.send_text("指定された講義IDは存在しません。")
-                else:
-                    send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
-
-            # 3.Check if ID is sent:
-            elif prepare.isID(received_message):
-                fetch_result = db.get_by_id(conn, received_message[1:6])
+        # 1.Check if reserved word is sent.
+        response[received_message](token, lists)
+    else:
+        # 2.Check if kakomon URL is sent:
+        if prepare.isURLID(received_message):
+            if prepare.isURL(received_message):
+                fetch_result = db.get_by_id(received_message[2:7])
                 if fetch_result[0] == 'success':
-                    # get lectureinfo list
-                    array = fetch_result[1]
+                    fetch_result = db.kakomon_wait_for_merge(received_message, uid)
+                    if fetch_result == 'success':
+                        send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+                    else:
+                        send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
+                else:
+                    send.send_text("指定された講義IDは存在しません。")
+            else:
+                send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
+
+        # 3.Check if ID is sent:
+        elif prepare.isID(received_message):
+            fetch_result = db.get_by_id(received_message[1:6])
+            if fetch_result[0] == 'success':
+                # get lectureinfo list
+                array = fetch_result[1]
+                json_content = prepare.rakutan_detail(array)
+                send.send_result(json_content, received_message, 'rakutan_detail')
+            else:
+                send.send_text(fetch_result[0])
+
+        # 4. Check if lecturename is sent:
+        else:
+            fetch_result = db.get_query_result(received_message)
+            stderr(f"[success]{uid}: {received_message}")
+            if fetch_result[0] == 'success':
+                array = fetch_result[1]
+                record_count = len(array['id'])
+                # if query result is 1:
+                if record_count == 1:
+                    array = prepare.list_to_str(array)
                     json_content = prepare.rakutan_detail(array)
                     send.send_result(json_content, received_message, 'rakutan_detail')
+                # if query result is over 100:
+                elif record_count > 100:
+                    send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
+                # if query result is between 2 and 100:
                 else:
-                    send.send_text(fetch_result[0])
-
-            # 4. Check if lecturename is sent:
+                    json_contents = prepare.search_result(array, received_message, record_count)
+                    send.send_result(json_contents, received_message, 'search_result')
+            # Send error message(s)
             else:
-                fetch_result = db.get_query_result(conn, received_message)
-                stderr(f"[success]{uid}: {received_message}")
-                if fetch_result[0] == 'success':
-                    array = fetch_result[1]
-                    record_count = len(array['id'])
-                    # if query result is 1:
-                    if record_count == 1:
-                        array = prepare.list_to_str(array)
-                        json_content = prepare.rakutan_detail(array)
-                        send.send_result(json_content, received_message, 'rakutan_detail')
-                    # if query result is over 100:
-                    elif record_count > 100:
-                        send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
-                    # if query result is between 2 and 100:
-                    else:
-                        json_contents = prepare.search_result(array, received_message, record_count)
-                        send.send_result(json_contents, received_message, 'search_result')
-                # Send error message(s)
-                else:
-                    send.send_text(fetch_result[0])
+                send.send_text(fetch_result[0])
 
 
 # Handle Postback message
@@ -861,25 +867,23 @@ def handle_message(event):
 
     # for admin only #
     elif types == 'decline':
-        with db.connect() as conn:
-            result = db.delete_db(conn, search_id, url[0])
-            if result == 'success':
-                db.delete_db(conn, search_id, url[0])
-                message = f"[#{search_id}] を削除しました。"
-            else:
-                message = f"[#{search_id}] の削除に失敗しました。"
-            send.push_text(message)
+        result = db.delete_db(search_id, url[0])
+        if result == 'success':
+            db.delete_db(search_id, url[0])
+            message = f"[#{search_id}] を削除しました。"
+        else:
+            message = f"[#{search_id}] の削除に失敗しました。"
+        send.push_text(message)
 
     # for admin only #
     elif types == 'merge':
-        with db.connect() as conn:
-            result = db.update_db(conn, search_id, url[0], "url")
-            if result == 'success':
-                db.delete_db(conn, search_id, url[0])
-                message = f"[#{search_id}] をマージしました。"
-            else:
-                message = f"[#{search_id}] のマージに失敗しました。"
-            send.push_text(message)
+        result = db.update_db(search_id, url[0], "url")
+        if result == 'success':
+            db.delete_db(search_id, url[0])
+            message = f"[#{search_id}] をマージしました。"
+        else:
+            message = f"[#{search_id}] のマージに失敗しました。"
+        send.push_text(message)
 
 
 if __name__ == "__main__":
