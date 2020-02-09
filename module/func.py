@@ -14,18 +14,19 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text):
     db = ap.DB()
     prepare = ap.Prepare()
 
-    get_omikuji = db.get_omikuji(omikuji_type)
+    with db.connect() as conn:
+        get_omikuji = db.get_omikuji(conn, omikuji_type)
 
-    if get_omikuji[0] == "success":
-        getRakutanInfo = db.get_by_id(get_omikuji[1])
-        if getRakutanInfo[0] == 'success':
-            array = getRakutanInfo[1]
-            json_content = prepare.rakutan_detail(array, color_theme, omikuji_type)
-            send.send_result(json_content, alt_text, 'omikuji')
+        if get_omikuji[0] == "success":
+            getRakutanInfo = db.get_by_id(conn, get_omikuji[1])
+            if getRakutanInfo[0] == 'success':
+                array = getRakutanInfo[1]
+                json_content = prepare.rakutan_detail(array, color_theme, omikuji_type)
+                send.send_result(json_content, alt_text, 'omikuji')
+            else:
+                send.send_text(getRakutanInfo[0])
         else:
-            send.send_text(getRakutanInfo[0])
-    else:
-        send.send_text("おみくじに失敗しました。もう一度引いてください。")
+            send.send_text("おみくじに失敗しました。もう一度引いてください。")
 
 
 def helps(token, lists):
