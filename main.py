@@ -384,21 +384,22 @@ class Prepare:
         self.json_content = LoadJSON(data)
 
         # modify header
-        self.json_content.header.contents[0]['contents'][0]['text'] = f"Search ID: #{array['id']}"
-        self.json_content.header.contents[1]['text'] = f"{array['lecturename']}"
-        self.json_content.header.contents[3]['contents'][1]['text'] = f"{array['facultyname']}"
-        self.json_content.header.contents[4]['contents'][1]['text'] = f"{self.isSet(array['groups'])}"
-        self.json_content.header.contents[4]['contents'][3]['text'] = f"{self.isSet(array['credits'])}"
+        header_contents = self.json_content.header.contents
+        header_contents[0]['contents'][0]['text'] = f"Search ID: #{array['id']}"
+        header_contents[1]['text'] = f"{array['lecturename']}"
+        header_contents[3]['contents'][1]['text'] = str(array['facultyname'])
+        header_contents[4]['contents'][1]['text'] = str(self.isSet(array['groups']))
+        header_contents[4]['contents'][3]['text'] = str(self.isSet(array['credits']))
 
         # for omikuji
+        omikuji_view = header_contents[0]['contents'][1]
         if omikuji == "normal":
-            self.json_content.header.contents[0]['contents'][1]['text'] = "【楽単】"
-            self.json_content.header.contents[0]['contents'][1]['color'] = "#ff7e41"
-            self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
+            omikuji_view['text'] = "【楽単】"
+            omikuji_view['color'] = "#ff7e41"
         elif omikuji == "oni":
-            self.json_content.header.contents[0]['contents'][1]['text'] = "【鬼単】"
-            self.json_content.header.contents[0]['contents'][1]['color'] = "#6d7bff"
-            self.json_content.header.contents[0]['contents'][2]['color'] = "#fed136"
+            omikuji_view['text'] = "【鬼単】"
+            omikuji_view['color'] = "#6d7bff"
+        header_contents[0]['contents'][2]['color'] = "#fed136"
 
         # adjust font size if long
         length = self.lecturename_len(array['lecturename'])
@@ -408,15 +409,16 @@ class Prepare:
             self.json_content.header.contents[1]['size'] = 'xl'
 
         # modify body
-        self.json_content.body.contents[0]['contents'][1]['contents'][1]['text'] = '{}% ({}/{})'.format(
-            self.cal_percentage(array['accept_prev'], array['total_prev']), self.isSet(array['accept_prev']),
-            self.isSet(array['total_prev']))
-        self.json_content.body.contents[0]['contents'][2]['contents'][1]['text'] = '{}% ({}/{})'.format(
-            self.cal_percentage(array['accept_prev2'], array['total_prev2']), self.isSet(array['accept_prev2']),
-            self.isSet(array['total_prev2']))
-        self.json_content.body.contents[0]['contents'][3]['contents'][1]['text'] = '{}% ({}/{})'.format(
-            self.cal_percentage(array['accept_prev3'], array['total_prev3']), self.isSet(array['accept_prev3']),
-            self.isSet(array['total_prev3']))
+        body_contents = self.json_content.body.contents
+        for year in range (1, 4): # [1, 3] inclusive
+            if year == 1:
+                _year = ""
+            else:
+                _year = str(year)
+            body_contents[0]['contents'][year]['contents'][1]['text'] = '{}% ({}/{})'.format(
+                self.cal_percentage(array[f'accept_prev{_year}'], array[f'total_prev{_year}']),
+                self.isSet(array[f'accept_prev{_year}']), self.isSet(array[f'total_prev{_year}']))
+        
         # rakutan judge
         rakutan_percent = self.rakutan_percentage(array)
         percent = [90, 85, 80, 75, 70, 60, 50, 0]
@@ -425,22 +427,25 @@ class Prepare:
         judge_list_data = {k: (v1, v2) for k, v1, v2 in zip(percent, judge, judge_color)}
         for key, value in judge_list_data.items():
             if rakutan_percent >= key:
-                self.json_content.body.contents[0]['contents'][5]['contents'][1]['text'] = f"{value[0]}　"
-                self.json_content.body.contents[0]['contents'][5]['contents'][1]['color'] = f"{value[1]}"
+                judge_view = body_contents[0]['contents'][5]['contents'][1]
+                judge_view['text'] = f"{value[0]}　"
+                judge_view['color'] = f"{value[1]}"
                 break
         # modify url
+        kakomon_symbol = self.json_content.body.contents[0]['contents'][6]['contents'][1]
+        kakomon_link = self.json_content.body.contents[0]['contents'][6]['contents'][2]
         if array['url'] is not None:
-            self.json_content.body.contents[0]['contents'][6]['contents'][1]['text'] = '〇'
-            self.json_content.body.contents[0]['contents'][6]['contents'][1]['color'] = '#0fd142'
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = 'リンク'
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['color'] = '#4c7cf5'
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['decoration'] = 'underline'
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['action']['uri'] = array['url']
+            kakomon_symbol['text'] = '〇'
+            kakomon_symbol['color'] = '#0fd142'
+            kakomon_link['text'] = 'リンク'
+            kakomon_link['color'] = '#4c7cf5'
+            kakomon_link['decoration'] = 'underline'
+            kakomon_link['uri'] = array['url']
         else:
             url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
             url_provide_template['data'] += str(array['id'])
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['action'] = url_provide_template
-            self.json_content.body.contents[0]['contents'][6]['contents'][2]['text'] = '追加する'
+            kakomon_link['action'] = url_provide_template
+            kakomon_link['text'] = '追加する'
 
         return [self.json_content]
 
