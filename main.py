@@ -350,7 +350,10 @@ class Prepare:
 
         # modify header
         header_contents = self.json_content.header.contents
-        header_contents[0]['contents'][0]['text'] = f"Search ID: #{array['id']}"
+
+        header_contents[0]['contents'][0]['action']['data'] += str(array['id'])
+        header_contents[0]['contents'][0]['action']['displayText'] = f"「{array['lecturename']}」をお気に入り登録しました！"
+        header_contents[0]['contents'][1]['text'] = f"Search ID: #{array['id']}"
         header_contents[1]['text'] = f"{array['lecturename']}"
         header_contents[3]['contents'][1]['text'] = str(array['facultyname'])
         header_contents[4]['contents'][1]['text'] = str(self.isSet(array['groups']))
@@ -358,9 +361,11 @@ class Prepare:
 
         # for omikuji
         if omikuji == "normal":
-            header_contents[0]['contents'][1]['color'] = "#fed136"
+            header_contents[0]['contents'][1]['text'] = "楽単おみくじ結果"
+            header_contents[0]['contents'][1]['color'] = "#ff7e41"
         elif omikuji == "oni":
-            header_contents[0]['contents'][1]['color'] = "#fed136"
+            header_contents[0]['contents'][1]['text'] = "鬼単おみくじ結果"
+            header_contents[0]['contents'][1]['color'] = "#6d7bff"
 
         # adjust font size if too long
         length = self.lecturename_len(array['lecturename'])
@@ -780,15 +785,20 @@ def handle_message(event):
     send = Send(token)
     db = DB()
 
+
     params = urllib.parse.parse_qs(received_postback)
     types = params.get('type')[0]
     search_id = params.get('id')[0]
     url = params.get('url')
+    print(params)
 
     # send template for sending kakomon url
     if types == 'url':
         message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
         send.send_multiline_text(message_list)
+
+    elif types == 'fav':
+        send.send_text(f"Got {search_id}!")
 
     # send small bubble
     elif types == "icon":

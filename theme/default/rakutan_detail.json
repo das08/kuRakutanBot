@@ -6,23 +6,29 @@
     "contents": [
       {
         "type": "box",
-        "layout": "baseline",
+        "layout": "horizontal",
         "contents": [
+          {
+            "type": "image",
+            "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gray_star_28.png",
+            "aspectRatio": "2:1",
+            "flex": 1,
+            "offsetStart": "-5px",
+            "action": {
+              "type": "postback",
+              "label": "action",
+              "data": "type=fav&id=",
+              "displayText": "placeholder"
+            }
+          },
           {
             "type": "text",
             "text": "Search ID:#12345",
             "weight": "bold",
             "color": "#01E550",
             "size": "sm",
-            "flex": 5
-          },
-          {
-            "type": "text",
-            "text": "おみくじ結果",
-            "color": "#3C3C3A",
-            "size": "xs",
-            "weight": "bold",
-            "flex": 3
+            "flex": 7,
+            "offsetStart": "-5px"
           }
         ]
       },

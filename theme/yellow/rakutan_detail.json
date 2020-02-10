@@ -9,12 +9,18 @@
         "layout": "baseline",
         "contents": [
           {
+            "type": "icon",
+            "url": "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gray_star_28.png",
+            "size": "sm"
+          },
+          {
             "type": "text",
             "text": "Search ID:#12345",
             "weight": "bold",
             "color": "#F4E87C",
             "size": "sm",
-            "flex": 5
+            "flex": 5,
+            "margin": "md"
           },
           {
             "type": "text",
