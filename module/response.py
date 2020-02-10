@@ -19,6 +19,12 @@ command = {
     "判定詳細": fn.rakutanHantei,
     "楽単詳細": fn.rakutanHantei,
 
+    "お気に入り": fn.getFavList,
+    "お気に入り一覧": fn.getFavList,
+    "おきにいり": fn.getFavList,
+    "fav": fn.getFavList,
+    "favs": fn.getFavList,
+
     "楽単おみくじ": fn.normalOmikuji,
     "おみくじ 楽単": fn.normalOmikuji,
     "おみくじ": fn.normalOmikuji,
@@ -27,6 +33,7 @@ command = {
     "鬼単おみくじ": fn.oniOmikuji,
     "おみくじ 鬼単": fn.oniOmikuji,
     "鬼単": fn.oniOmikuji,
+    "鬼": fn.oniOmikuji,
 
     "お問い合わせ": fn.inquiry,
 

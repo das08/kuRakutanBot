@@ -96,8 +96,9 @@ class DB:
     """
 
     def __init__(self):
-        self.columnName = ['id', 'facultyname', 'lecturename', 'groups', 'credits', 'total_prev', 'accept_prev',
-                           'total_prev2', 'accept_prev2', 'total_prev3', 'accept_prev3', 'url']
+        self.columnNameRakutan = ['id', 'facultyname', 'lecturename', 'groups', 'credits', 'total_prev', 'accept_prev',
+                                  'total_prev2', 'accept_prev2', 'total_prev3', 'accept_prev3', 'url']
+        self.columnNameFav = ['lectureid', 'lecturename']
 
     def connect(self):
         """Connect to database"""
@@ -125,7 +126,7 @@ class DB:
 
                 for row in results:
                     # set value to rakutan_data
-                    for i, column in enumerate(self.columnName):
+                    for i, column in enumerate(self.columnNameRakutan):
                         rakutan_data[column] = row[i]
 
                 return mes, rakutan_data
@@ -162,7 +163,7 @@ class DB:
                     mes = f"「{searchWord}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
 
                 # set value to rakutan_data
-                for i, column in enumerate(self.columnName):
+                for i, column in enumerate(self.columnNameRakutan):
                     rakutan_data[column] = [row[i] for row in results]
 
                 return mes, rakutan_data
@@ -173,11 +174,11 @@ class DB:
                 if cur:
                     cur.close()
 
-    def get_userfav(self, conn, uid, lectureID, types=""):
+    def get_userfav(self, conn, uid, lectureID="", types=""):
         with conn.cursor() as cur:
             try:
                 if types == "count":
-                    sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s))"
+                    sqlStr = "SELECT lectureid, lecturename FROM userfav WHERE (uid = (%s))"
                     cur.execute(sqlStr, (uid,))
                 else:
                     sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s) and lectureid = (%s))"
@@ -189,7 +190,11 @@ class DB:
                 else:
                     mes = "notyet"
                 if types == "count":
-                    mes = len(results)
+                    fav_list = {}
+                    # set value to fav_list
+                    for i, column in enumerate(self.columnNameFav):
+                        fav_list[column] = [row[i] for row in results]
+                    mes = fav_list
 
                 return mes
             except:
@@ -628,7 +633,7 @@ class Send:
     def __init__(self, token):
         self.token = token
 
-    def send_result(self, json_content, search_text, types):
+    def send_result(self, json_content, search_text="", types=" "):
         """
         Sends search result with flex message.
         json_content MUST BE LIST.
@@ -895,7 +900,8 @@ def handle_message(event):
             # if user is not faved
             elif getFav == "notyet":
                 res_count = db.get_userfav(conn, uid, 12345, "count")
-                if res_count >= 100:
+                count = len(res_count)
+                if count >= 100:
                     send.send_text("お気に入り登録が上限に達しました。")
                 else:
                     res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])

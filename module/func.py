@@ -1,5 +1,6 @@
 import main as ap
 import json
+import math
 
 
 def prepareFlexMessage(token, color_theme, json_name, alt_text):
@@ -91,6 +92,64 @@ def unavailable(token, lists):
 
 def checkKakomon(token, lists):
     ap.push_flex()
+
+
+def getFavList(token, lists):
+    send = ap.Send(token)
+    db = ap.DB()
+    uid = lists[0]
+    with db.connect() as conn:
+        get_fav = db.get_userfav(conn, uid, types='count')
+
+    json_contents = []
+    processed_count = 0
+    record_count = len(get_fav['lectureid'])
+    number_of_pages = math.ceil(record_count / 20)
+
+    # load templates
+    f = open(f'./theme/default/fav.json', 'r', encoding='utf-8')
+    f_data = json.dumps(json.load(f))
+
+    # put all pages into json_contents list
+    json_contents.append(ap.LoadJSON(f_data))
+    for _ in range(number_of_pages - 1):
+        json_contents.append(ap.LoadJSON(f_data))
+
+    # generate list for each page
+    for i in range(1, number_of_pages + 1):
+        json_contents[i - 1]["header"]["contents"][1]["text"] = f"({i}/{number_of_pages})"
+
+        json_fav_row = []
+        # 20 lecturename lists per page
+        for j in range(20):
+            if processed_count == record_count:
+                break
+
+            # template for lecturename row
+            socket = {'type': 'box', 'layout': 'horizontal',
+                      'contents': [
+                          {'type': 'text', 'text': '[Lecture Name]', 'size': 'sm', 'color': '#555555', 'flex': 7},
+                          {'type': 'text', 'text': '選択', 'size': 'md', 'color': '#4c7cf5', 'align': 'end',
+                           'weight': 'bold',
+                           'decoration': 'underline', 'margin': 'none',
+                           'action': {'type': 'message', 'label': 'action', 'text': '#[Lecture ID]'},
+                           'offsetBottom': '3px',
+                           'flex': 2}], 'margin': 'lg'}
+            # socket['contents'][1]['color'] = colorCode[color_theme]
+
+            socket['contents'][0]['text'] = f"{get_fav['lecturename'][processed_count]}"
+            socket["contents"][1]['action']['text'] = '#' + str(get_fav['lectureid'][processed_count])
+
+            # add row to the page
+            json_fav_row.append(socket.copy())
+            processed_count += 1
+
+        # overwrite old page with new one
+        json_contents[i - 1]["body"]["contents"][0]["contents"] = json_fav_row
+    if record_count == 0:
+        send.send_text("お気に入りは登録されていません。\n講義名の左上にある★マークを押すとお気に入り登録できます。")
+    else:
+        send.send_result(json_contents, types='お気に入り一覧')
 
 
 def setRichMenu(token, lists):
