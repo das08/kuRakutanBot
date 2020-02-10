@@ -357,15 +357,10 @@ class Prepare:
         header_contents[4]['contents'][3]['text'] = str(self.isSet(array['credits']))
 
         # for omikuji
-        omikuji_view = header_contents[0]['contents'][1]
         if omikuji == "normal":
-            omikuji_view['text'] = "【楽単】"
-            omikuji_view['color'] = "#ff7e41"
-            header_contents[0]['contents'][2]['color'] = "#fed136"
+            header_contents[0]['contents'][1]['color'] = "#fed136"
         elif omikuji == "oni":
-            omikuji_view['text'] = "【鬼単】"
-            omikuji_view['color'] = "#6d7bff"
-            header_contents[0]['contents'][2]['color'] = "#fed136"
+            header_contents[0]['contents'][1]['color'] = "#fed136"
 
         # adjust font size if too long
         length = self.lecturename_len(array['lecturename'])
