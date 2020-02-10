@@ -253,23 +253,24 @@ class DB:
                 if cur:
                     cur.close()
 
-    def add_to_db(self, conn, uid, types, lectureID=""):
+    def add_to_db(self, conn, uid, types, lectureID="", lectureName=""):
         dates = datetime.datetime.now()
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
-            value2 = dates
         elif types == "fav":
             res = self.get_userfav(conn, uid, lectureID)
             if res == "already":
                 return "already"
-            sqlStr = "INSERT INTO userfav (uid,lectureid) VALUES (%s,%s)"
-            value2 = lectureID
+            sqlStr = "INSERT INTO userfav (uid,lectureid,lecturename) VALUES (%s,%s,%s)"
         else:
             return "invalid types"
 
         with conn.cursor() as cur:
             try:
-                cur.execute(sqlStr, (uid, value2))
+                if types == "uid":
+                    cur.execute(sqlStr, (uid, dates))
+                elif types == "fav":
+                    cur.execute(sqlStr, (uid, lectureID, lectureName))
                 return 'success'
             except:
                 stderr("[error]addDB:Cannnot add to usertable/userfav.")
@@ -897,7 +898,7 @@ def handle_message(event):
                 if res_count >= 100:
                     send.send_text("お気に入り登録が上限に達しました。")
                 else:
-                    res_add = db.add_to_db(conn, uid, 'fav', search_id)
+                    res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
                     if res_add == "success":
                         text = f"「{lectureName[0]}」をお気に入り登録しました！"
                     else:
@@ -921,7 +922,6 @@ def handle_message(event):
                     send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
                 else:
                     send.send_text(fetch_result[0])
-
 
     # send small bubble
     elif types == "icon":
@@ -954,5 +954,5 @@ def handle_message(event):
 
 if __name__ == "__main__":
     #    app.run()
-    port = int(os.getenv("PORT"))
+    port = int(os.getenv("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
