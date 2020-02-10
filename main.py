@@ -901,7 +901,7 @@ def handle_message(event):
             elif getFav == "notyet":
                 res_count = db.get_userfav(conn, uid, 12345, "count")
                 count = len(res_count)
-                if count >= 100:
+                if count >= 50:
                     send.send_text("お気に入り登録が上限に達しました。")
                 else:
                     res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
@@ -928,6 +928,16 @@ def handle_message(event):
                     send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
                 else:
                     send.send_text(fetch_result[0])
+    elif types == "favdel":
+        with db.connect() as conn:
+            getFav = db.get_userfav(conn, uid, search_id)
+            if getFav == "already":
+                res_delete = db.delete_db(conn, search_id, uid, 'fav')
+                if res_delete == "success":
+                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
+                else:
+                    text = "お気に入りを削除できませんでした。"
+                send.send_text(text)
 
     # send small bubble
     elif types == "icon":

@@ -104,7 +104,7 @@ def getFavList(token, lists):
     json_contents = []
     processed_count = 0
     record_count = len(get_fav['lectureid'])
-    number_of_pages = math.ceil(record_count / 20)
+    number_of_pages = math.ceil(record_count / 10)
 
     # load templates
     f = open(f'./theme/default/fav.json', 'r', encoding='utf-8')
@@ -121,7 +121,7 @@ def getFavList(token, lists):
 
         json_fav_row = []
         # 20 lecturename lists per page
-        for j in range(20):
+        for j in range(10):
             if processed_count == record_count:
                 break
 
@@ -130,15 +130,22 @@ def getFavList(token, lists):
                       'contents': [
                           {'type': 'text', 'text': '[Lecture Name]', 'size': 'sm', 'color': '#555555', 'flex': 7},
                           {'type': 'text', 'text': '選択', 'size': 'md', 'color': '#4c7cf5', 'align': 'end',
-                           'weight': 'bold',
-                           'decoration': 'underline', 'margin': 'none',
+                           'weight': 'bold', 'decoration': 'underline', 'margin': 'none',
                            'action': {'type': 'message', 'label': 'action', 'text': '#[Lecture ID]'},
                            'offsetBottom': '3px',
-                           'flex': 2}], 'margin': 'lg'}
+                           'flex': 2},
+                          {'type': 'text', 'text': '×', 'size': 'md', 'color': '#881111', 'align': 'end',
+                           'weight': 'bold', 'decoration': 'none', 'margin': 'none',
+                           'action': {'type': 'postback', 'label': 'action', 'data': '#123456'},
+                           'offsetBottom': '3px'
+                           }
+                      ], 'margin': 'lg'}
             # socket['contents'][1]['color'] = colorCode[color_theme]
 
             socket['contents'][0]['text'] = f"{get_fav['lecturename'][processed_count]}"
             socket["contents"][1]['action']['text'] = '#' + str(get_fav['lectureid'][processed_count])
+
+            socket["contents"][2]['action']['data'] = f"type=favdel&id={get_fav['lectureid'][processed_count]}&lecname={get_fav['lecturename'][processed_count]}"
 
             # add row to the page
             json_fav_row.append(socket.copy())

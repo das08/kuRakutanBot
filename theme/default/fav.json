@@ -59,6 +59,22 @@
                 },
                 "offsetBottom": "3px",
                 "flex": 2
+              },
+              {
+                "type": "text",
+                "text": "×",
+                "size": "md",
+                "color": "#881111",
+                "align": "end",
+                "weight": "bold",
+                "decoration": "none",
+                "margin": "none",
+                "action": {
+                  "type": "postback",
+                  "label": "action",
+                  "data": "hello"
+                },
+                "offsetBottom": "3px"
               }
             ],
             "margin": "lg"
@@ -75,7 +91,7 @@
         "contents": [
           {
             "type": "text",
-            "text": "お気に入りは最大100件まで登録できます。",
+            "text": "お気に入りは最大50件まで登録できます。",
             "size": "xxs",
             "color": "#aaaaaa"
           }
