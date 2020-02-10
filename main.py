@@ -19,7 +19,7 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent, Postback
+    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent
 )
 
 app = Flask(__name__)
@@ -96,22 +96,16 @@ class DB:
     """
 
     def __init__(self):
-        pass
+        self.columnName = ['id', 'facultyname', 'lecturename', 'groups', 'credits', 'total_prev', 'accept_prev',
+                           'total_prev2', 'accept_prev2', 'total_prev3', 'accept_prev3', 'url']
 
     def connect(self):
-        """
-        Connect to database.
-        :return:
-        """
+        """Connect to database"""
         dsn = "host={} port={} dbname={} user={} password={}".format(db_host, db_port, db_name, db_user, db_pass)
         return psycopg2.connect(dsn)
 
     def get_by_id(self, conn, search_id):
-        """
-        Get lecture data that matches lecture id from database.
-        :param search_id: int
-        :return: Single lecture data
-        """
+        """Get lecture data that matches lecture id from database."""
         with conn.cursor() as cur:
             try:
                 sqlStr = """
@@ -130,18 +124,20 @@ class DB:
                     mes = "そのIDは存在しません。"
 
                 for row in results:
-                    rakutan_data['id'] = row[0]
-                    rakutan_data['facultyname'] = row[1]
-                    rakutan_data['lecturename'] = row[2]
-                    rakutan_data['groups'] = row[3]
-                    rakutan_data['credits'] = row[4]
-                    rakutan_data['total_prev'] = row[5]
-                    rakutan_data['accept_prev'] = row[6]
-                    rakutan_data['total_prev2'] = row[7]
-                    rakutan_data['accept_prev2'] = row[8]
-                    rakutan_data['total_prev3'] = row[9]
-                    rakutan_data['accept_prev3'] = row[10]
-                    rakutan_data['url'] = row[11]
+                    for i, column in enumerate(self.columnName):
+                        rakutan_data[column] = row[i]
+                        # rakutan_data['id'] = row[0]
+                        # rakutan_data['facultyname'] = row[1]
+                        # rakutan_data['lecturename'] = row[2]
+                        # rakutan_data['groups'] = row[3]
+                        # rakutan_data['credits'] = row[4]
+                        # rakutan_data['total_prev'] = row[5]
+                        # rakutan_data['accept_prev'] = row[6]
+                        # rakutan_data['total_prev2'] = row[7]
+                        # rakutan_data['accept_prev2'] = row[8]
+                        # rakutan_data['total_prev3'] = row[9]
+                        # rakutan_data['accept_prev3'] = row[10]
+                        # rakutan_data['url'] = row[11]
                 return mes, rakutan_data
 
             except:
@@ -175,18 +171,21 @@ class DB:
                 else:
                     mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
 
-                rakutan_data['id'] = [row[0] for row in results]
-                rakutan_data['facultyname'] = [row[1] for row in results]
-                rakutan_data['lecturename'] = [row[2] for row in results]
-                rakutan_data['groups'] = [row[3] for row in results]
-                rakutan_data['credits'] = [row[4] for row in results]
-                rakutan_data['total_prev'] = [row[5] for row in results]
-                rakutan_data['accept_prev'] = [row[6] for row in results]
-                rakutan_data['total_prev2'] = [row[7] for row in results]
-                rakutan_data['accept_prev2'] = [row[8] for row in results]
-                rakutan_data['total_prev3'] = [row[9] for row in results]
-                rakutan_data['accept_prev3'] = [row[10] for row in results]
-                rakutan_data['url'] = [row[11] for row in results]
+                for i, column in enumerate(self.columnName):
+                    rakutan_data[column] = [row[i] for row in results]
+
+                # rakutan_data['id'] = [row[0] for row in results]
+                # rakutan_data['facultyname'] = [row[1] for row in results]
+                # rakutan_data['lecturename'] = [row[2] for row in results]
+                # rakutan_data['groups'] = [row[3] for row in results]
+                # rakutan_data['credits'] = [row[4] for row in results]
+                # rakutan_data['total_prev'] = [row[5] for row in results]
+                # rakutan_data['accept_prev'] = [row[6] for row in results]
+                # rakutan_data['total_prev2'] = [row[7] for row in results]
+                # rakutan_data['accept_prev2'] = [row[8] for row in results]
+                # rakutan_data['total_prev3'] = [row[9] for row in results]
+                # rakutan_data['accept_prev3'] = [row[10] for row in results]
+                # rakutan_data['url'] = [row[11] for row in results]
 
                 return mes, rakutan_data
             except:
@@ -523,11 +522,7 @@ class Prepare:
             return True
 
     def isURL(self, text):
-        """
-        Checks if received text is in URL-format or not. Has to start with http:// or https://.
-        :param text: received_text
-        :return: Bool
-        """
+        """Checks if received text is in URL-format or not. Has to start with http:// or https://"""
         # regex for judging URL format.
         pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
         url = text[8:].strip()
@@ -538,11 +533,7 @@ class Prepare:
             return False
 
     def isSet(self, value):
-        """
-        Check if value is None type.
-        :param value: value
-        :return:
-        """
+        """Return '---' if value is None type."""
         if value is None:
             return '---'
         else:
@@ -601,13 +592,7 @@ class Prepare:
         return length
 
     def merge_url(self, lecture_id, lecture_name, lecture_url):
-        """
-        For ADMIN. Prepares flex message for merging/declining kakomon url.
-        :param lecture_id: int
-        :param lecture_name: str
-        :param lecture_url: str *MUST start with http:// or https://
-        :return: json_content
-        """
+        """For ADMIN. Prepares flex message for merging/declining kakomon url."""
         f = open(f'./theme/etc/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
@@ -671,22 +656,14 @@ class Send:
         line_bot_api.reply_message(self.token, messages=content)
 
     def send_text(self, message):
-        """
-        Sends plain text.
-        :param message: str
-        :return: Nothing
-        """
+        """Sends plain text."""
         line_bot_api.reply_message(
             self.token,
             TextSendMessage(text=message),
         )
 
     def send_multiline_text(self, message_list):
-        """
-        Sends multiline text.
-        :param message_list: List
-        :return: Nothing
-        """
+        """Sends multiline text."""
         message = []
         for row in message_list:
             mes = TextSendMessage(text=row)
@@ -698,6 +675,7 @@ class Send:
         )
 
     def push_text(self, message):
+        """Sends push text."""
         line_bot_api.push_message(
             ADMIN_UID,
             TextSendMessage(text=message),
