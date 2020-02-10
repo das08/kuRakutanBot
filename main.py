@@ -173,6 +173,31 @@ class DB:
                 if cur:
                     cur.close()
 
+    def get_userfav(self, conn, uid, lectureID):
+        with conn.cursor() as cur:
+            try:
+                sqlStr = """
+              SELECT
+              lectureid
+              FROM userfav
+              WHERE (uid = (%s) and lectureid = (%s))
+              """
+                cur.execute(sqlStr, (uid, lectureID))
+                results = cur.fetchall()
+
+                if len(results) > 0:
+                    mes = "already"
+                else:
+                    mes = "notyet"
+
+                return mes
+            except:
+                stderr(f"[error]get-userfav:Cannot {lectureID}")
+                return "error"
+            finally:
+                if cur:
+                    cur.close()
+
     def get_merge_list(self, conn):
         with conn.cursor() as cur:
             try:
@@ -227,19 +252,26 @@ class DB:
                 if cur:
                     cur.close()
 
-    def add_to_db(self, conn, value, types):
+    def add_to_db(self, conn, uid, types, lectureID=""):
         dates = datetime.datetime.now()
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
+            value2 = dates
+        elif types == "fav":
+            res = self.get_userfav(conn, uid, lectureID)
+            if res == "already":
+                return "already"
+            sqlStr = "INSERT INTO userfav (uid,lectureid) VALUES (%s,%s)"
+            value2 = lectureID
         else:
             return "invalid types"
 
         with conn.cursor() as cur:
             try:
-                cur.execute(sqlStr, (value, dates))
+                cur.execute(sqlStr, (uid, value2))
                 return 'success'
             except:
-                stderr("[error]addDB:Cannnot add to usertable.")
+                stderr("[error]addDB:Cannnot add to usertable/userfav.")
                 return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
             finally:
                 if cur:
@@ -266,14 +298,18 @@ class DB:
                 if cur:
                     cur.close()
 
-    def delete_db(self, conn, search_id, url):
+    def delete_db(self, conn, search_id, uid="", types="", url=""):
         with conn.cursor() as cur:
             try:
-                sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
-                cur.execute(sqlStr, (search_id, url))
+                if types == "fav":
+                    sqlStr = "DELETE FROM userfav WHERE (uid)=(%s) and (lectureid)=(%s)"
+                    cur.execute(sqlStr, (uid, search_id))
+                else:
+                    sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
+                    cur.execute(sqlStr, (search_id, url))
                 return 'success'
             except:
-                stderr("[error]deleteDB:Cannnot delete urlmarge.")
+                stderr("[error]deleteDB:Cannnot delete urlmarge/userfav.")
                 return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
             finally:
                 if cur:
@@ -330,10 +366,11 @@ class Prepare:
         self.json_content = {}
         self.json_contents = []
 
-    def rakutan_detail(self, array, color="", omikuji=""):
+    def rakutan_detail(self, array, fav="notyet", color="", omikuji=""):
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
+        :param fav:
         :param omikuji:
         :param array: lecture data from db
         :param color: FOR fn.omikuji
@@ -351,8 +388,15 @@ class Prepare:
         # modify header
         header_contents = self.json_content.header.contents
 
-        header_contents[0]['contents'][0]['action']['data'] += str(array['id'])
-        header_contents[0]['contents'][0]['action']['displayText'] = f"「{array['lecturename']}」をお気に入り登録しました！"
+        if fav == "already":
+            header_contents[0]['contents'][0][
+                'url'] = "https://scdn.line-apps.com/n/channel_devcenter/img/fx/review_gold_star_28.png"
+            # header_contents[0]['contents'][0]['action']['displayText'] = f"「{array['lecturename']}」をお気に入り解除しました！"
+        # else:
+        #     header_contents[0]['contents'][0]['action']['displayText'] = f"「{array['lecturename']}」をお気に入り登録しました！"
+        header_contents[0]['contents'][0]['action'][
+            'data'] = f"type=fav&id={array['id']}&lecname={array['lecturename']}"
+
         header_contents[0]['contents'][1]['text'] = f"Search ID: #{array['id']}"
         header_contents[1]['text'] = f"{array['lecturename']}"
         header_contents[3]['contents'][1]['text'] = str(array['facultyname'])
@@ -620,6 +664,36 @@ class Send:
 
         line_bot_api.reply_message(self.token, messages=content)
 
+    def send_fav(self, json_content, search_text, types):
+        content = []
+        page_count = 1
+        alt_text = types
+        max_page_count = len(json_content)
+        for page in json_content:
+            # setting up alt text
+            if types == "search_result":
+                alt_text = f"({page_count}/{max_page_count})「{search_text}」の検索結果"
+            elif types == "rakutan_detail":
+                # fetching lecturename from json_content
+                alt_text = f"「{page['header']['contents'][1]['text']}」のらくたん情報"
+            elif types == "omikuji":
+                alt_text = search_text
+
+            # make it json format
+            try:
+                page = json.dumps(page.to_dict())
+            except:
+                page = json.dumps(page)
+
+            flex_message = FlexSendMessage(
+                alt_text=alt_text,
+                contents=json.loads(page)
+            )
+            content.append(flex_message)
+            page_count += 1
+
+        line_bot_api.reply_message(self.token, messages=content)
+
     def send_text(self, message):
         """Sends plain text."""
         line_bot_api.reply_message(
@@ -745,10 +819,11 @@ def handle_message(event):
             # 3.Check if ID is sent:
             elif prepare.isID(received_message):
                 fetch_result = db.get_by_id(conn, received_message[1:6])
+                fetch_fav = db.get_userfav(conn, uid, received_message[1:6])
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array)
+                    json_content = prepare.rakutan_detail(array, fetch_fav)
                     send.send_result(json_content, received_message, 'rakutan_detail')
                 else:
                     send.send_text(fetch_result[0])
@@ -762,8 +837,11 @@ def handle_message(event):
                     record_count = len(array['id'])
                     # if query result is 1:
                     if record_count == 1:
+
                         array = prepare.list_to_str(array)
-                        json_content = prepare.rakutan_detail(array)
+                        fetch_fav = db.get_userfav(conn, uid, array['id'])
+
+                        json_content = prepare.rakutan_detail(array, fetch_fav)
                         send.send_result(json_content, received_message, 'rakutan_detail')
                     # if query result is over 100:
                     elif record_count > 100:
@@ -781,16 +859,17 @@ def handle_message(event):
 @handler.add(PostbackEvent)
 def handle_message(event):
     token = event.reply_token
+    uid = event.source.user_id
     received_postback = event.postback.data
     send = Send(token)
+    prepare = Prepare("postback", token)
     db = DB()
-
 
     params = urllib.parse.parse_qs(received_postback)
     types = params.get('type')[0]
     search_id = params.get('id')[0]
+    lectureName = params.get('lecname')
     url = params.get('url')
-    print(params)
 
     # send template for sending kakomon url
     if types == 'url':
@@ -798,7 +877,47 @@ def handle_message(event):
         send.send_multiline_text(message_list)
 
     elif types == 'fav':
-        send.send_text(f"Got {search_id}!")
+        with db.connect() as conn:
+            res_add=""
+            res_delete=""
+            getFav = db.get_userfav(conn, uid, search_id)
+
+            # if user already faved
+            if getFav == "already":
+                res_delete = db.delete_db(conn, search_id, uid, 'fav')
+                if res_delete == "success":
+                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
+                else:
+                    send.send_text("お気に入りを削除できませんでした。")
+
+            # if user is not faved
+            elif getFav == "notyet":
+                res_add = db.add_to_db(conn, uid, 'fav', search_id)
+                if res_add == "success":
+                    text = f"「{lectureName[0]}」をお気に入り登録しました！"
+                else:
+                    send.send_text("お気に入りを登録できませんでした。")
+
+            else:
+                send.send_text("お気に入り取得中にエラーが発生しました。")
+
+            if res_add == "success" or res_delete == "success":
+                fetch_result = db.get_by_id(conn, search_id)
+                fetch_fav = db.get_userfav(conn, uid, search_id)
+                if fetch_result[0] == 'success':
+                    # get lectureinfo list
+                    array = fetch_result[1]
+                    json_content = prepare.rakutan_detail(array, fetch_fav, "default")
+                    f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
+                    json_text = [json.load(f)]
+                    print(json_text[0])
+                    json_text[0]['body']['contents'][0]['text'] = text
+
+                    json_text.append(json_content[0])
+                    send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
+                else:
+                    send.send_text(fetch_result[0])
+
 
     # send small bubble
     elif types == "icon":

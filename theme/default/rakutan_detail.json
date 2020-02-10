@@ -17,8 +17,7 @@
             "action": {
               "type": "postback",
               "label": "action",
-              "data": "type=fav&id=",
-              "displayText": "placeholder"
+              "data": "hello"
             }
           },
           {

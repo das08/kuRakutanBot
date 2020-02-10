@@ -9,7 +9,7 @@ def prepareFlexMessage(token, color_theme, json_name, alt_text):
     send.send_result(json_content, alt_text, alt_text)
 
 
-def prepareOmikuji(token, color_theme, omikuji_type, alt_text):
+def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
     send = ap.Send(token)
     db = ap.DB()
     prepare = ap.Prepare()
@@ -21,7 +21,9 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text):
             getRakutanInfo = db.get_by_id(conn, get_omikuji[1])
             if getRakutanInfo[0] == 'success':
                 array = getRakutanInfo[1]
-                json_content = prepare.rakutan_detail(array, color_theme, omikuji_type)
+                fetch_fav = db.get_userfav(conn, uid, array['id'])
+
+                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type)
                 send.send_result(json_content, alt_text, 'omikuji')
             else:
                 send.send_text(getRakutanInfo[0])
@@ -54,12 +56,12 @@ def showVersion(token, lists):
 
 def normalOmikuji(token, lists):
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果')
+    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0])
 
 
 def oniOmikuji(token, lists):
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果')
+    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0])
 
 
 def changeTheme(token, lists):

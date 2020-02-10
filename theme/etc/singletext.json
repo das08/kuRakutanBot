@@ -1,0 +1,20 @@
+{
+  "type": "bubble",
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "placehonder",
+        "wrap": true
+      }
+    ]
+  },
+  "size": "kilo",
+  "styles": {
+    "footer": {
+      "separator": true
+    }
+  }
+}
