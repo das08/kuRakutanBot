@@ -19,7 +19,7 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent, Postback
+    MessageEvent, TextMessage, TextSendMessage, FlexSendMessage, PostbackEvent
 )
 
 app = Flask(__name__)
@@ -96,22 +96,16 @@ class DB:
     """
 
     def __init__(self):
-        pass
+        self.columnName = ['id', 'facultyname', 'lecturename', 'groups', 'credits', 'total_prev', 'accept_prev',
+                           'total_prev2', 'accept_prev2', 'total_prev3', 'accept_prev3', 'url']
 
     def connect(self):
-        """
-        Connect to database.
-        :return:
-        """
+        """Connect to database"""
         dsn = "host={} port={} dbname={} user={} password={}".format(db_host, db_port, db_name, db_user, db_pass)
         return psycopg2.connect(dsn)
 
     def get_by_id(self, conn, search_id):
-        """
-        Get lecture data that matches lecture id from database.
-        :param search_id: int
-        :return: Single lecture data
-        """
+        """Get lecture data that matches lecture id from database."""
         with conn.cursor() as cur:
             try:
                 sqlStr = """
@@ -130,18 +124,10 @@ class DB:
                     mes = "そのIDは存在しません。"
 
                 for row in results:
-                    rakutan_data['id'] = row[0]
-                    rakutan_data['facultyname'] = row[1]
-                    rakutan_data['lecturename'] = row[2]
-                    rakutan_data['groups'] = row[3]
-                    rakutan_data['credits'] = row[4]
-                    rakutan_data['total_prev'] = row[5]
-                    rakutan_data['accept_prev'] = row[6]
-                    rakutan_data['total_prev2'] = row[7]
-                    rakutan_data['accept_prev2'] = row[8]
-                    rakutan_data['total_prev3'] = row[9]
-                    rakutan_data['accept_prev3'] = row[10]
-                    rakutan_data['url'] = row[11]
+                    # set value to rakutan_data
+                    for i, column in enumerate(self.columnName):
+                        rakutan_data[column] = row[i]
+
                 return mes, rakutan_data
 
             except:
@@ -151,11 +137,11 @@ class DB:
                 if cur:
                     cur.close()
 
-    def get_query_result(self, conn, search_word):
+    def get_query_result(self, conn, searchWord):
         """
         Get lecture list that matches search_word from database.
         Default: forward match
-        :param search_word: str
+        :param searchWord: str
         :return: List of lecture data
         """
         with conn.cursor() as cur:
@@ -166,31 +152,22 @@ class DB:
               FROM rakutan
               WHERE (lecturename) ILIKE (%s)
               """
-                cur.execute(sqlStr, (search_word + "%",))
+                cur.execute(sqlStr, (searchWord + "%",))
                 results = cur.fetchall()
                 rakutan_data = {}
 
                 if len(results) > 0:
                     mes = "success"
                 else:
-                    mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+                    mes = f"「{searchWord}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
 
-                rakutan_data['id'] = [row[0] for row in results]
-                rakutan_data['facultyname'] = [row[1] for row in results]
-                rakutan_data['lecturename'] = [row[2] for row in results]
-                rakutan_data['groups'] = [row[3] for row in results]
-                rakutan_data['credits'] = [row[4] for row in results]
-                rakutan_data['total_prev'] = [row[5] for row in results]
-                rakutan_data['accept_prev'] = [row[6] for row in results]
-                rakutan_data['total_prev2'] = [row[7] for row in results]
-                rakutan_data['accept_prev2'] = [row[8] for row in results]
-                rakutan_data['total_prev3'] = [row[9] for row in results]
-                rakutan_data['accept_prev3'] = [row[10] for row in results]
-                rakutan_data['url'] = [row[11] for row in results]
+                # set value to rakutan_data
+                for i, column in enumerate(self.columnName):
+                    rakutan_data[column] = [row[i] for row in results]
 
                 return mes, rakutan_data
             except:
-                stderr(f"[error]get-query-result:Cannot {search_word}")
+                stderr(f"[error]get-query-result:Cannot {searchWord}")
                 return "DB接続エラーです", "exception"
             finally:
                 if cur:
@@ -239,10 +216,10 @@ class DB:
                 results = cur.fetchall()
 
                 for row in results:
-                    omikuji_id = row[0]
-                # test function
+                    omikujiID = row[0]
+
                 stderr(f"[success]omikuji:Omikuji {types}!")
-                return 'success', omikuji_id
+                return 'success', omikujiID
             except:
                 stderr("[error]omikuji:Cannot get omikuji.")
                 return "DB接続エラーです", "exception"
@@ -366,8 +343,8 @@ class Prepare:
             f = open(f'./theme/{color}/rakutan_detail.json', 'r', encoding='utf-8')
         else:
             f = open(f'./theme/{color_theme}/rakutan_detail.json', 'r', encoding='utf-8')
-        # load template
 
+        # load template
         data = json.dumps(json.load(f))
         self.json_content = LoadJSON(data)
 
@@ -384,12 +361,13 @@ class Prepare:
         if omikuji == "normal":
             omikuji_view['text'] = "【楽単】"
             omikuji_view['color'] = "#ff7e41"
+            header_contents[0]['contents'][2]['color'] = "#fed136"
         elif omikuji == "oni":
             omikuji_view['text'] = "【鬼単】"
             omikuji_view['color'] = "#6d7bff"
-        header_contents[0]['contents'][2]['color'] = "#fed136"
+            header_contents[0]['contents'][2]['color'] = "#fed136"
 
-        # adjust font size if long
+        # adjust font size if too long
         length = self.lecturename_len(array['lecturename'])
         if length > 24:
             self.json_content.header.contents[1]['size'] = 'lg'
@@ -446,10 +424,10 @@ class Prepare:
         :param record_count: count
         :return: json_content
         """
-        facultyname_abbr = {'文学部': '文', '教育学部': '教', '法学部': '法', '経済学部': '経', '理学部': '理', '医学部': '医医',
-                            '医学部（人間健康科学科）': '人健',
-                            '薬学部': '薬', '工学部': '工', '農学部': '農', '総合人間学部': '総人', '国際高等教育院': '般教'}
-        color_theme_font = {'default': '#4c7cf5', 'yellow': '#D17A22'}
+        facultyNameAbbr = {'文学部': '文', '教育学部': '教', '法学部': '法', '経済学部': '経', '理学部': '理', '医学部': '医医',
+                           '医学部（人間健康科学科）': '人健',
+                           '薬学部': '薬', '工学部': '工', '農学部': '農', '総合人間学部': '総人', '国際高等教育院': '般教'}
+        colorCode = {'default': '#4c7cf5', 'yellow': '#D17A22'}
         processed_count = 0
         number_of_pages = math.ceil(record_count / 20)
 
@@ -490,9 +468,9 @@ class Prepare:
                                'action': {'type': 'message', 'label': 'action', 'text': '#[Lecture ID]'},
                                'offsetBottom': '3px',
                                'flex': 2}], 'margin': 'lg'}
-                socket['contents'][1]['color'] = color_theme_font[color_theme]
+                socket['contents'][1]['color'] = colorCode[color_theme]
                 socket['contents'][0][
-                    'text'] = f"[{facultyname_abbr[array['facultyname'][processed_count]]}]{array['lecturename'][processed_count]}"
+                    'text'] = f"[{facultyNameAbbr[array['facultyname'][processed_count]]}]{array['lecturename'][processed_count]}"
                 socket["contents"][1]['action']['text'] = '#' + str(array['id'][processed_count])
 
                 # add row to the page
@@ -523,11 +501,7 @@ class Prepare:
             return True
 
     def isURL(self, text):
-        """
-        Checks if received text is in URL-format or not. Has to start with http:// or https://.
-        :param text: received_text
-        :return: Bool
-        """
+        """Checks if received text is in URL-format or not. Has to start with http:// or https://"""
         # regex for judging URL format.
         pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
         url = text[8:].strip()
@@ -538,11 +512,7 @@ class Prepare:
             return False
 
     def isSet(self, value):
-        """
-        Check if value is None type.
-        :param value: value
-        :return:
-        """
+        """Return '---' if value is None type."""
         if value is None:
             return '---'
         else:
@@ -560,24 +530,14 @@ class Prepare:
         return new_array
 
     def cal_percentage(self, accepted, total):
-        """
-        Calculates percentage.
-        :param accepted: int
-        :param total: int
-        :return: int percent
-        """
+        """Calculates percentage. Return '---' if div/0"""
         if total == 0:
             return '---'
         else:
             return round(100 * accepted / total, 1)
 
     def rakutan_percentage(self, array):
-        """
-        Returns percentage for judging rakurtan.
-        Priority: prev -> prev2 -> prev3
-        :param array: list lecture data from db
-        :return: int percent
-        """
+        """Returns percentage for judging rakurtan"""
         if array['total_prev'] != 0:
             percent = round(100 * array['accept_prev'] / array['total_prev'], 1)
         elif array['total_prev2'] != 0:
@@ -587,11 +547,7 @@ class Prepare:
         return percent
 
     def lecturename_len(self, text):
-        """
-        Find length of lecturename.
-        :param text: str lecturename
-        :return: int length
-        """
+        """Find length of lecturename based on unicode"""
         length = 0
         for c in text:
             if unicodedata.east_asian_width(c) in 'FWA':
@@ -601,13 +557,7 @@ class Prepare:
         return length
 
     def merge_url(self, lecture_id, lecture_name, lecture_url):
-        """
-        For ADMIN. Prepares flex message for merging/declining kakomon url.
-        :param lecture_id: int
-        :param lecture_name: str
-        :param lecture_url: str *MUST start with http:// or https://
-        :return: json_content
-        """
+        """For ADMIN. Prepares flex message for merging/declining kakomon url."""
         f = open(f'./theme/etc/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
@@ -671,22 +621,14 @@ class Send:
         line_bot_api.reply_message(self.token, messages=content)
 
     def send_text(self, message):
-        """
-        Sends plain text.
-        :param message: str
-        :return: Nothing
-        """
+        """Sends plain text."""
         line_bot_api.reply_message(
             self.token,
             TextSendMessage(text=message),
         )
 
     def send_multiline_text(self, message_list):
-        """
-        Sends multiline text.
-        :param message_list: List
-        :return: Nothing
-        """
+        """Sends multiline text."""
         message = []
         for row in message_list:
             mes = TextSendMessage(text=row)
@@ -698,6 +640,7 @@ class Send:
         )
 
     def push_text(self, message):
+        """Sends push text."""
         line_bot_api.push_message(
             ADMIN_UID,
             TextSendMessage(text=message),
