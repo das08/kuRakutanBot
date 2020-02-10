@@ -173,22 +173,23 @@ class DB:
                 if cur:
                     cur.close()
 
-    def get_userfav(self, conn, uid, lectureID):
+    def get_userfav(self, conn, uid, lectureID, types=""):
         with conn.cursor() as cur:
             try:
-                sqlStr = """
-              SELECT
-              lectureid
-              FROM userfav
-              WHERE (uid = (%s) and lectureid = (%s))
-              """
-                cur.execute(sqlStr, (uid, lectureID))
+                if types == "count":
+                    sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s))"
+                    cur.execute(sqlStr, (uid,))
+                else:
+                    sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s) and lectureid = (%s))"
+                    cur.execute(sqlStr, (uid, lectureID))
                 results = cur.fetchall()
 
                 if len(results) > 0:
                     mes = "already"
                 else:
                     mes = "notyet"
+                if types == "count":
+                    mes = len(results)
 
                 return mes
             except:
@@ -878,8 +879,8 @@ def handle_message(event):
 
     elif types == 'fav':
         with db.connect() as conn:
-            res_add=""
-            res_delete=""
+            res_add = ""
+            res_delete = ""
             getFav = db.get_userfav(conn, uid, search_id)
 
             # if user already faved
@@ -892,11 +893,15 @@ def handle_message(event):
 
             # if user is not faved
             elif getFav == "notyet":
-                res_add = db.add_to_db(conn, uid, 'fav', search_id)
-                if res_add == "success":
-                    text = f"「{lectureName[0]}」をお気に入り登録しました！"
+                res_count = db.get_userfav(conn, uid, 12345, "count")
+                if res_count >= 100:
+                    send.send_text("お気に入り登録が上限に達しました。")
                 else:
-                    send.send_text("お気に入りを登録できませんでした。")
+                    res_add = db.add_to_db(conn, uid, 'fav', search_id)
+                    if res_add == "success":
+                        text = f"「{lectureName[0]}」をお気に入り登録しました！"
+                    else:
+                        send.send_text("お気に入りを登録できませんでした。")
 
             else:
                 send.send_text("お気に入り取得中にエラーが発生しました。")
@@ -910,7 +915,6 @@ def handle_message(event):
                     json_content = prepare.rakutan_detail(array, fetch_fav, "default")
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
                     json_text = [json.load(f)]
-                    print(json_text[0])
                     json_text[0]['body']['contents'][0]['text'] = text
 
                     json_text.append(json_content[0])
