@@ -259,7 +259,7 @@ class DB:
                     cur.close()
 
     def add_to_db(self, conn, uid, types, lectureID="", lectureName=""):
-        dates = datetime.datetime.now()
+        dates = str(datetime.datetime.now()).replace('.', '/')
         if types == "uid":
             sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
         elif types == "fav":
@@ -285,7 +285,6 @@ class DB:
                     cur.close()
 
     def update_db(self, conn, uid, value="", types=""):
-        dates = datetime.datetime.now()
         with conn.cursor() as cur:
             try:
                 if types == "count":
@@ -323,7 +322,7 @@ class DB:
                     cur.close()
 
     def kakomon_wait_for_merge(self, conn, received_message, uid):
-        dates = datetime.datetime.now()
+        dates = str(datetime.datetime.now()).replace('.', '/')
         search_id = received_message[2:7]
         url = received_message[8:].strip()
 
