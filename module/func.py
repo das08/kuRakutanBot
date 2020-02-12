@@ -15,7 +15,8 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
     db = ap.DB()
     prepare = ap.Prepare()
 
-    with db.connect() as conn:
+    with db.connect() as client:
+        conn = client[ap.mongo_db]
         get_omikuji = db.get_omikuji(conn, omikuji_type)
 
         if get_omikuji[0] == "success":
@@ -98,7 +99,8 @@ def getFavList(token, lists):
     send = ap.Send(token)
     db = ap.DB()
     uid = lists[0]
-    with db.connect() as conn:
+    with db.connect() as client:
+        conn = client[ap.mongo_db]
         get_fav = db.get_userfav(conn, uid, types='count')
 
     json_contents = []
@@ -145,7 +147,8 @@ def getFavList(token, lists):
             socket['contents'][0]['text'] = f"{get_fav['lecturename'][processed_count]}"
             socket["contents"][1]['action']['text'] = '#' + str(get_fav['lectureid'][processed_count])
 
-            socket["contents"][2]['action']['data'] = f"type=favdel&id={get_fav['lectureid'][processed_count]}&lecname={get_fav['lecturename'][processed_count]}"
+            socket["contents"][2]['action'][
+                'data'] = f"type=favdel&id={get_fav['lectureid'][processed_count]}&lecname={get_fav['lecturename'][processed_count]}"
 
             # add row to the page
             json_fav_row.append(socket.copy())
