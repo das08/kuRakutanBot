@@ -37,6 +37,7 @@ db_port = os.environ["db_port"]
 db_name = os.environ["db_name"]
 db_user = os.environ["db_user"]
 db_pass = os.environ["db_pass"]
+mongo_db = os.environ["mongo_db"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
@@ -108,7 +109,7 @@ class DB:
         """Connect to database"""
         uri = "mongodb://das08rw:Takeda0802rw@178.128.89.239:27017"
         client = MongoClient(uri)
-        return client['rakutanDB']
+        return client  # ['rakutanDB']
 
     def get_by_id(self, conn, search_id):
         """Get lecture data that matches lecture id from database."""
@@ -203,11 +204,11 @@ class DB:
 
                 for row in results:
                     mongoToList.append(row)
+
                 # set value to fav_list
                 for column in self.columnNameFav:
                     fav_list[column] = [row[column] for row in mongoToList]
                 mes = fav_list
-                print(fav_list)
 
             return mes
         except:
@@ -787,8 +788,9 @@ def hello_world():
 def push_flex():
     prepare = Prepare()
     db = DB()
-    conn = db.connect()
-    result = db.get_merge_list(conn)
+    with db.connect() as client:
+        conn = client[mongo_db]
+        result = db.get_merge_list(conn)
 
     if result[0] == 'success':
         lecture_id = result[1]
@@ -836,76 +838,77 @@ def handle_message(event):
     db = DB()
     prepare = Prepare(received_message, token)
 
-    # with db.connect() as conn:
-    conn = db.connect()
-    check_user = db.isinDB(conn, uid)
-    if check_user[0]:
-        # add 1 to search counter
-        db.update_db(conn, uid, types='count')
-    color_theme = check_user[1]
+    with db.connect() as client:
+        conn = client[mongo_db]
+        # conn = db.connect()
+        check_user = db.isinDB(conn, uid)
+        if check_user[0]:
+            # add 1 to search counter
+            db.update_db(conn, uid, types='count')
+        color_theme = check_user[1]
 
-    # load reserved command dict
-    response = module.response.command
+        # load reserved command dict
+        response = module.response.command
 
-    if received_message in response:
-        # prepare params to pass
-        lists = [uid, received_message, color_theme]
+        if received_message in response:
+            # prepare params to pass
+            lists = [uid, received_message, color_theme]
 
-        # 1.Check if reserved word is sent.
-        response[received_message](token, lists)
-    else:
-        # 2.Check if kakomon URL is sent:
-        if prepare.isURLID(received_message):
-            if prepare.isURL(received_message):
-                fetch_result = db.get_by_id(conn, received_message[2:7])
-                if fetch_result[0] == 'success':
-                    fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
-                    if fetch_result == 'success':
-                        send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
-                    else:
-                        send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
-                else:
-                    send.send_text("指定された講義IDは存在しません。")
-            else:
-                send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
-
-        # 3.Check if ID is sent:
-        elif prepare.isID(received_message):
-            fetch_result = db.get_by_id(conn, received_message[1:6])
-            fetch_fav = db.get_userfav(conn, uid, received_message[1:6])
-            if fetch_result[0] == 'success':
-                # get lectureinfo list
-                array = fetch_result[1]
-                json_content = prepare.rakutan_detail(array, fetch_fav)
-                send.send_result(json_content, received_message, 'rakutan_detail')
-            else:
-                send.send_text(fetch_result[0])
-
-        # 4. Check if lecturename is sent:
+            # 1.Check if reserved word is sent.
+            response[received_message](token, lists)
         else:
-            fetch_result = db.get_query_result(conn, received_message)
-            stderr(f"[success]{uid}: {received_message}")
-            if fetch_result[0] == 'success':
-                array = fetch_result[1]
-                record_count = len(array['id'])
-                # if query result is 1:
-                if record_count == 1:
+            # 2.Check if kakomon URL is sent:
+            if prepare.isURLID(received_message):
+                if prepare.isURL(received_message):
+                    fetch_result = db.get_by_id(conn, received_message[2:7])
+                    if fetch_result[0] == 'success':
+                        fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
+                        if fetch_result == 'success':
+                            send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+                        else:
+                            send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
+                    else:
+                        send.send_text("指定された講義IDは存在しません。")
+                else:
+                    send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
 
-                    array = prepare.list_to_str(array)
-                    fetch_fav = db.get_userfav(conn, uid, array['id'])
-
+            # 3.Check if ID is sent:
+            elif prepare.isID(received_message):
+                fetch_result = db.get_by_id(conn, received_message[1:6])
+                fetch_fav = db.get_userfav(conn, uid, received_message[1:6])
+                if fetch_result[0] == 'success':
+                    # get lectureinfo list
+                    array = fetch_result[1]
                     json_content = prepare.rakutan_detail(array, fetch_fav)
                     send.send_result(json_content, received_message, 'rakutan_detail')
-                # if query result is over 100:
-                elif record_count > 100:
-                    send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
-                # if query result is between 2 and 100:
                 else:
-                    json_contents = prepare.search_result(array, received_message, record_count)
-                    send.send_result(json_contents, received_message, 'search_result')
-            # Send error message(s)
+                    send.send_text(fetch_result[0])
+
+            # 4. Check if lecturename is sent:
             else:
-                send.send_text(fetch_result[0])
+                fetch_result = db.get_query_result(conn, received_message)
+                stderr(f"[success]{uid}: {received_message}")
+                if fetch_result[0] == 'success':
+                    array = fetch_result[1]
+                    record_count = len(array['id'])
+                    # if query result is 1:
+                    if record_count == 1:
+
+                        array = prepare.list_to_str(array)
+                        fetch_fav = db.get_userfav(conn, uid, array['id'])
+
+                        json_content = prepare.rakutan_detail(array, fetch_fav)
+                        send.send_result(json_content, received_message, 'rakutan_detail')
+                    # if query result is over 100:
+                    elif record_count > 100:
+                        send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
+                    # if query result is between 2 and 100:
+                    else:
+                        json_contents = prepare.search_result(array, received_message, record_count)
+                        send.send_result(json_contents, received_message, 'search_result')
+                # Send error message(s)
+                else:
+                    send.send_text(fetch_result[0])
 
 
 # Handle Postback message
@@ -917,104 +920,106 @@ def handle_message(event):
     send = Send(token)
     prepare = Prepare("postback", token)
     db = DB()
-    conn = db.connect()
 
     params = urllib.parse.parse_qs(received_postback)
     types = params.get('type')[0]
     search_id = params.get('id')[0]
     lectureName = params.get('lecname')
     url = params.get('url')
+    with db.connect() as client:
+        conn = client[mongo_db]
+        # conn = db.connect()
 
-    # send template for sending kakomon url
-    if types == 'url':
-        message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
-        send.send_multiline_text(message_list)
+        # send template for sending kakomon url
+        if types == 'url':
+            message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
+            send.send_multiline_text(message_list)
 
-    elif types == 'fav':
-        # with db.connect() as conn:
-        res_add = ""
-        res_delete = ""
-        getFav = db.get_userfav(conn, uid, search_id)
+        elif types == 'fav':
+            # with db.connect() as conn:
+            res_add = ""
+            res_delete = ""
+            getFav = db.get_userfav(conn, uid, search_id)
 
-        # if user already faved
-        if getFav == "already":
-            res_delete = db.delete_db(conn, search_id, uid, 'fav')
-            if res_delete == "success":
-                text = f"「{lectureName[0]}」をお気に入りから外しました！"
-            else:
-                send.send_text("お気に入りを削除できませんでした。")
-
-        # if user is not faved
-        elif getFav == "notyet":
-            res_count = db.get_userfav(conn, uid, 12345, "count")
-            count = len(res_count)
-            if count >= 50:
-                send.send_text("お気に入り登録が上限に達しました。")
-            else:
-                res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
-                if res_add == "success":
-                    text = f"「{lectureName[0]}」をお気に入り登録しました！"
+            # if user already faved
+            if getFav == "already":
+                res_delete = db.delete_db(conn, search_id, uid, 'fav')
+                if res_delete == "success":
+                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
                 else:
-                    send.send_text("お気に入りを登録できませんでした。")
+                    send.send_text("お気に入りを削除できませんでした。")
 
-        else:
-            send.send_text("お気に入り取得中にエラーが発生しました。")
+            # if user is not faved
+            elif getFav == "notyet":
+                res_count = db.get_userfav(conn, uid, 12345, "count")
+                count = len(res_count)
+                if count >= 50:
+                    send.send_text("お気に入り登録が上限に達しました。")
+                else:
+                    res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
+                    if res_add == "success":
+                        text = f"「{lectureName[0]}」をお気に入り登録しました！"
+                    else:
+                        send.send_text("お気に入りを登録できませんでした。")
 
-        if res_add == "success" or res_delete == "success":
-            fetch_result = db.get_by_id(conn, search_id)
-            fetch_fav = db.get_userfav(conn, uid, search_id)
-            if fetch_result[0] == 'success':
-                # get lectureinfo list
-                array = fetch_result[1]
-                json_content = prepare.rakutan_detail(array, fetch_fav, "default")
-                f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
-                json_text = [json.load(f)]
-                json_text[0]['body']['contents'][0]['text'] = text
-
-                json_text.append(json_content[0])
-                send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
             else:
-                send.send_text(fetch_result[0])
-    elif types == "favdel":
-        # with db.connect() as conn:
-        getFav = db.get_userfav(conn, uid, search_id)
-        if getFav == "already":
-            res_delete = db.delete_db(conn, search_id, uid, 'fav')
-            if res_delete == "success":
-                text = f"「{lectureName[0]}」をお気に入りから外しました！"
+                send.send_text("お気に入り取得中にエラーが発生しました。")
+
+            if res_add == "success" or res_delete == "success":
+                fetch_result = db.get_by_id(conn, search_id)
+                fetch_fav = db.get_userfav(conn, uid, search_id)
+                if fetch_result[0] == 'success':
+                    # get lectureinfo list
+                    array = fetch_result[1]
+                    json_content = prepare.rakutan_detail(array, fetch_fav, "default")
+                    f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
+                    json_text = [json.load(f)]
+                    json_text[0]['body']['contents'][0]['text'] = text
+
+                    json_text.append(json_content[0])
+                    send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
+                else:
+                    send.send_text(fetch_result[0])
+        elif types == "favdel":
+            # with db.connect() as conn:
+            getFav = db.get_userfav(conn, uid, search_id)
+            if getFav == "already":
+                res_delete = db.delete_db(conn, search_id, uid, 'fav')
+                if res_delete == "success":
+                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
+                else:
+                    text = "お気に入りを削除できませんでした。"
+                send.send_text(text)
+            elif getFav == "notyet":
+                send.send_text(f"「{lectureName[0]}」は既に削除しているかお気に入り登録されていません。")
+
+        # send small bubble
+        elif types == "icon":
+            f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
+            json_content = [json.load(f)]
+            send.send_result(json_content, "京大楽単bot", "京大楽単bot")
+
+        # for admin only #
+        elif types == 'decline':
+            # with db.connect() as conn:
+            result = db.delete_db(conn, search_id, url[0])
+            if result == 'success':
+                db.delete_db(conn, search_id, url[0])
+                message = f"[#{search_id}] を削除しました。"
             else:
-                text = "お気に入りを削除できませんでした。"
-            send.send_text(text)
-        elif getFav == "notyet":
-            send.send_text(f"「{lectureName[0]}」は既に削除しているかお気に入り登録されていません。")
+                message = f"[#{search_id}] の削除に失敗しました。"
+            send.push_text(message)
 
-    # send small bubble
-    elif types == "icon":
-        f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
-        json_content = [json.load(f)]
-        send.send_result(json_content, "京大楽単bot", "京大楽単bot")
-
-    # for admin only #
-    elif types == 'decline':
-        # with db.connect() as conn:
-        result = db.delete_db(conn, search_id, url[0])
-        if result == 'success':
-            db.delete_db(conn, search_id, url[0])
-            message = f"[#{search_id}] を削除しました。"
-        else:
-            message = f"[#{search_id}] の削除に失敗しました。"
-        send.push_text(message)
-
-    # for admin only #
-    elif types == 'merge':
-        # with db.connect() as conn:
-        result = db.update_db(conn, search_id, url[0], "url")
-        if result == 'success':
-            db.delete_db(conn, search_id, url[0])
-            message = f"[#{search_id}] をマージしました。"
-        else:
-            message = f"[#{search_id}] のマージに失敗しました。"
-        send.push_text(message)
+        # for admin only #
+        elif types == 'merge':
+            # with db.connect() as conn:
+            result = db.update_db(conn, search_id, url[0], "url")
+            if result == 'success':
+                db.delete_db(conn, search_id, url[0])
+                message = f"[#{search_id}] をマージしました。"
+            else:
+                message = f"[#{search_id}] のマージに失敗しました。"
+            send.push_text(message)
 
 
 if __name__ == "__main__":
