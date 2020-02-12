@@ -12,7 +12,6 @@ import json
 import datetime
 import math
 import copy
-import psycopg2
 import unicodedata
 import urllib
 
@@ -32,11 +31,10 @@ app = Flask(__name__)
 CHANNEL_ACCESS_TOKEN = os.environ["CHANNEL_ACCESS_TOKEN"]
 CHANNEL_SECRET = os.environ["CHANNEL_SECRET"]
 ADMIN_UID = os.environ["ADMIN_UID"]
-db_host = os.environ["db_host"]
-db_port = os.environ["db_port"]
-db_name = os.environ["db_name"]
-db_user = os.environ["db_user"]
-db_pass = os.environ["db_pass"]
+mongo_host = os.environ["mongo_host"]
+mongo_port = os.environ["mongo_port"]
+mongo_user = os.environ["mongo_user"]
+mongo_pass = os.environ["mongo_pass"]
 mongo_db = os.environ["mongo_db"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
@@ -107,20 +105,19 @@ class DB:
 
     def connect(self):
         """Connect to database"""
-        uri = "mongodb://das08rw:Takeda0802rw@178.128.89.239:27017"
+        uri = f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}"
         client = MongoClient(uri)
-        return client  # ['rakutanDB']
+        return client
 
     def get_by_id(self, conn, search_id):
         """Get lecture data that matches lecture id from database."""
         try:
-            query = {'id': int(search_id)}
-
             collection = conn['rakutan']
+            rakutan_data = {}
+
+            query = {'id': int(search_id)}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
-
-            rakutan_data = {}
 
             if count > 0:
                 mes = "success"
@@ -128,7 +125,7 @@ class DB:
                 mes = "そのIDは存在しません。"
 
             for row in results:
-                # # set value to rakutan_data
+                # set value to rakutan_data
                 rakutan_data = row
 
             return mes, rakutan_data
@@ -136,9 +133,6 @@ class DB:
         except:
             stderr(f"[error]get-by-id:Cannot #{search_id}")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def get_query_result(self, conn, searchWord):
         """
@@ -148,20 +142,13 @@ class DB:
         :return: List of lecture data
         """
         try:
-            # sqlStr = """
-            #   SELECT
-            #   id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
-            #   FROM rakutan
-            #   WHERE (lecturename) ILIKE (%s)
-            #   """
-            query = {'lecturename': {'$regex': f'^{searchWord}', '$options': 'i'}}
-
-            collection = conn['rakutan']
-            results = collection.find(filter=query, projection={'_id': False})
-            count = collection.count_documents(filter=query)
-
             rakutan_data = {}
             mongoToList = []
+            collection = conn['rakutan']
+
+            query = {'lecturename': {'$regex': f'^{searchWord}', '$options': 'i'}}
+            results = collection.find(filter=query, projection={'_id': False})
+            count = collection.count_documents(filter=query)
 
             if count > 0:
                 mes = "success"
@@ -173,24 +160,23 @@ class DB:
             # set value to rakutan_data
             for column in self.columnNameRakutan:
                 rakutan_data[column] = [row[column] for row in mongoToList]
+
             return mes, rakutan_data
         except:
             stderr(f"[error]get-query-result:Cannot {searchWord}")
             return "DB接続エラーです", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def get_userfav(self, conn, uid, lectureID="", types=""):
         try:
+            fav_list = {}
+            mongoToList = []
+            collection = conn['userfav']
+
             if types == "count":
                 query = {'uid': uid}
-                # sqlStr = "SELECT lectureid, lecturename FROM userfav WHERE (uid = (%s))"
             else:
                 query = {'$and': [{'uid': uid}, {'lectureid': lectureID}]}
-                # sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s) and lectureid = (%s))"
 
-            collection = conn['userfav']
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
 
@@ -199,9 +185,6 @@ class DB:
             else:
                 mes = "notyet"
             if types == "count":
-                mongoToList = []
-                fav_list = {}
-
                 for row in results:
                     mongoToList.append(row)
 
@@ -209,27 +192,21 @@ class DB:
                 for column in self.columnNameFav:
                     fav_list[column] = [row[column] for row in mongoToList]
                 mes = fav_list
-
             return mes
         except:
             stderr(f"[error]get-userfav:Cannot {lectureID}")
             return "error"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def get_merge_list(self, conn):
-        # with conn.cursor() as cur:
+        lecture_name = []
+        lecture_id = []
+        lecture_url = []
         try:
-            query = {'search_id': {'$ne': ''}}
-            # sqlStr = "SELECT search_id, url FROM urlmerge"
             collection = conn['urlmerge']
+
+            query = {'search_id': {'$ne': ''}}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
-
-            lecture_name = []
-            lecture_id = []
-            lecture_url = []
 
             if count > 0:
                 mes = "success"
@@ -243,29 +220,23 @@ class DB:
                     lecture_url.append(url)
             else:
                 mes = "error"
-
             return mes, lecture_id, lecture_name, lecture_url
         except:
             stderr("[error]fetch-merge-list:Cannot fetch from DB")
             return "DB接続エラーです", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def get_omikuji(self, conn, types):
-        # with conn.cursor() as cur:
         try:
+            collection = conn['rakutan']
+
             if types == "normal":
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'accept_prev': {'$gt': 15}},
                                   {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.8, '$total_prev']}]}}]}
-                # sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
             else:
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'total_prev': {'$gt': 4}},
                                   {'$expr': {'$lt': ['$accept_prev', {'$multiply': [0.31, '$total_prev']}]}}]}
-                # sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
-            collection = conn['rakutan']
+
             results = collection.find(filter=query, projection={'id': True})
-            count = collection.count_documents(filter=query)
 
             omikujiID = random.choice([row['id'] for row in results])
 
@@ -274,81 +245,54 @@ class DB:
         except:
             stderr("[error]omikuji:Cannot get omikuji.")
             return "DB接続エラーです", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def add_to_db(self, conn, uid, types, lectureID="", lectureName=""):
-        dates = str(datetime.datetime.now()).replace('.', '/')
-        if types == "uid":
-            query = {'uid': uid, 'register_time': dates}
-            collection = conn['usertable']
-            # sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
-
-        elif types == "fav":
-            res = self.get_userfav(conn, uid, lectureID)
-            if res == "already":
-                return "already"
-            query = {'uid': uid, 'lectureid': lectureID, 'lecturename': lectureName}
-            collection = conn['userfav']
-            # sqlStr = "INSERT INTO userfav (uid,lectureid,lecturename) VALUES (%s,%s,%s)"
-
-        else:
-            return "invalid types"
-
-        # with conn.cursor() as cur:
         try:
-            results = collection.insert(query)
-            # count = collection.count_documents(filter=query)
+            dates = str(datetime.datetime.now()).replace('.', '/')
+            if types == "uid":
+                collection = conn['usertable']
+                query = {'uid': uid, 'register_time': dates}
 
+            elif types == "fav":
+                collection = conn['userfav']
+                res = self.get_userfav(conn, uid, lectureID)
+                if res == "already":
+                    return "already"
+                query = {'uid': uid, 'lectureid': lectureID, 'lecturename': lectureName}
+
+            else:
+                return "invalid types"
+
+            results = collection.insert(query)
             return 'success'
         except:
             stderr("[error]addDB:Cannnot add to usertable/userfav.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def update_db(self, conn, uid, value="", types=""):
-        dates = str(datetime.datetime.now()).replace('.', '/')
-        # with conn.cursor() as cur:
         try:
             if types == "count":
                 collection = conn['usertable']
                 collection.update({'uid': uid}, {'$inc': {'count': 1}})
-                # sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
-                # cur.execute(sqlStr, (uid,))
             elif types == "theme":
                 collection = conn['usertable']
                 collection.update({'uid': uid}, {'$set': {'color_theme': value}})
-                # sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
-                # cur.execute(sqlStr, (value, uid))
             elif types == "url":
                 collection = conn['rakutan']
                 collection.update({'id': uid}, {'$set': {'url': value}})
-                # sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
-                # cur.execute(sqlStr, (value, uid))
             return 'success'
         except:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def delete_db(self, conn, search_id, uid="", types="", url=""):
-        # with conn.cursor() as cur:
         try:
             if types == "fav":
                 query = {'$and': [{'uid': uid}, {'lectureid': search_id}]}
                 collection = conn['userfav']
-                # sqlStr = "DELETE FROM userfav WHERE (uid)=(%s) and (lectureid)=(%s)"
-                # cur.execute(sqlStr, (uid, search_id))
             else:
                 query = {'$and': [{'search_id': search_id}, {'url': url}]}
                 collection = conn['urlmerge']
-                # sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
-                # cur.execute(sqlStr, (search_id, url))
 
             results = collection.remove(query)
 
@@ -356,41 +300,28 @@ class DB:
         except:
             stderr("[error]deleteDB:Cannnot delete urlmarge/userfav.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-        # finally:
-
-    #     if cur:
-    #         cur.close()
 
     def kakomon_wait_for_merge(self, conn, received_message, uid):
         dates = str(datetime.datetime.now()).replace('.', '/')
         search_id = received_message[2:7]
         url = received_message[8:].strip()
-
-        # with conn.cursor() as cur:
         try:
-            query = {'search_id': search_id, 'url': url, 'uid': uid, 'send_time': dates}
-            # sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
             collection = conn['urlmerge']
+            query = {'search_id': search_id, 'url': url, 'uid': uid, 'send_time': dates}
             results = collection.insert(query)
             return 'success'
         except:
             stderr("[error]kakomon-merge:Cannot insert.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-        # finally:
-        #     if cur:
-        #         cur.close()
 
     def isinDB(self, conn, uid):
-        # with conn.cursor() as cur:
         try:
-            # sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
-            query = {'uid': uid}
             collection = conn['usertable']
+            query = {'uid': uid}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
 
             if count > 0:
-                # color_theme = results[0][1]
                 for row in results:
                     color_theme = row['color_theme']
             else:
@@ -402,9 +333,6 @@ class DB:
             stderr(f"[error]isinDB:Cannnot isin {uid}")
             color_theme = "default"
             return False, color_theme
-        # finally:
-        # if cur:
-        #     cur.close()
 
 
 class Prepare:
@@ -840,8 +768,8 @@ def handle_message(event):
 
     with db.connect() as client:
         conn = client[mongo_db]
-        # conn = db.connect()
         check_user = db.isinDB(conn, uid)
+
         if check_user[0]:
             # add 1 to search counter
             db.update_db(conn, uid, types='count')
@@ -928,7 +856,6 @@ def handle_message(event):
     url = params.get('url')
     with db.connect() as client:
         conn = client[mongo_db]
-        # conn = db.connect()
 
         # send template for sending kakomon url
         if types == 'url':
@@ -936,7 +863,6 @@ def handle_message(event):
             send.send_multiline_text(message_list)
 
         elif types == 'fav':
-            # with db.connect() as conn:
             res_add = ""
             res_delete = ""
             getFav = db.get_userfav(conn, uid, search_id)
@@ -981,7 +907,6 @@ def handle_message(event):
                 else:
                     send.send_text(fetch_result[0])
         elif types == "favdel":
-            # with db.connect() as conn:
             getFav = db.get_userfav(conn, uid, search_id)
             if getFav == "already":
                 res_delete = db.delete_db(conn, search_id, uid, 'fav')
@@ -1001,7 +926,6 @@ def handle_message(event):
 
         # for admin only #
         elif types == 'decline':
-            # with db.connect() as conn:
             result = db.delete_db(conn, search_id, url[0])
             if result == 'success':
                 db.delete_db(conn, search_id, url[0])
@@ -1012,7 +936,6 @@ def handle_message(event):
 
         # for admin only #
         elif types == 'merge':
-            # with db.connect() as conn:
             result = db.update_db(conn, search_id, url[0], "url")
             if result == 'success':
                 db.delete_db(conn, search_id, url[0])
