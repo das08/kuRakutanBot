@@ -15,21 +15,21 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
     db = ap.DB()
     prepare = ap.Prepare()
 
-    with db.connect() as conn:
-        get_omikuji = db.get_omikuji(conn, omikuji_type)
+    conn = db.connect()
+    get_omikuji = db.get_omikuji(conn, omikuji_type)
 
-        if get_omikuji[0] == "success":
-            getRakutanInfo = db.get_by_id(conn, get_omikuji[1])
-            if getRakutanInfo[0] == 'success':
-                array = getRakutanInfo[1]
-                fetch_fav = db.get_userfav(conn, uid, array['id'])
+    if get_omikuji[0] == "success":
+        getRakutanInfo = db.get_by_id(conn, get_omikuji[1])
+        if getRakutanInfo[0] == 'success':
+            array = getRakutanInfo[1]
+            fetch_fav = db.get_userfav(conn, uid, array['id'])
 
-                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type)
-                send.send_result(json_content, alt_text, 'omikuji')
-            else:
-                send.send_text(getRakutanInfo[0])
+            json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type)
+            send.send_result(json_content, alt_text, 'omikuji')
         else:
-            send.send_text("おみくじに失敗しました。もう一度引いてください。")
+            send.send_text(getRakutanInfo[0])
+    else:
+        send.send_text("おみくじに失敗しました。もう一度引いてください。")
 
 
 def helps(token, lists):
@@ -98,8 +98,8 @@ def getFavList(token, lists):
     send = ap.Send(token)
     db = ap.DB()
     uid = lists[0]
-    with db.connect() as conn:
-        get_fav = db.get_userfav(conn, uid, types='count')
+    conn = db.connect()
+    get_fav = db.get_userfav(conn, uid, types='count')
 
     json_contents = []
     processed_count = 0
@@ -145,7 +145,8 @@ def getFavList(token, lists):
             socket['contents'][0]['text'] = f"{get_fav['lecturename'][processed_count]}"
             socket["contents"][1]['action']['text'] = '#' + str(get_fav['lectureid'][processed_count])
 
-            socket["contents"][2]['action']['data'] = f"type=favdel&id={get_fav['lectureid'][processed_count]}&lecname={get_fav['lecturename'][processed_count]}"
+            socket["contents"][2]['action'][
+                'data'] = f"type=favdel&id={get_fav['lectureid'][processed_count]}&lecname={get_fav['lecturename'][processed_count]}"
 
             # add row to the page
             json_fav_row.append(socket.copy())

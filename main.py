@@ -1,6 +1,10 @@
+import random
+
 import module
+# import setting
 
 from flask import Flask, request, abort
+from pymongo import MongoClient
 import os
 import sys
 import re
@@ -102,41 +106,38 @@ class DB:
 
     def connect(self):
         """Connect to database"""
-        dsn = "host={} port={} dbname={} user={} password={}".format(db_host, db_port, db_name, db_user, db_pass)
-        return psycopg2.connect(dsn)
+        uri = "mongodb://das08rw:Takeda0802rw@178.128.89.239:27017"
+        client = MongoClient(uri)
+        return client['rakutanDB']
 
     def get_by_id(self, conn, search_id):
         """Get lecture data that matches lecture id from database."""
-        with conn.cursor() as cur:
-            try:
-                sqlStr = """
-              SELECT
-              id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
-              FROM rakutan
-              WHERE (id) = (%s)
-              """
-                cur.execute(sqlStr, (int(search_id),))
-                results = cur.fetchall()
-                rakutan_data = {}
+        try:
+            query = {'id': int(search_id)}
 
-                if len(results) > 0:
-                    mes = "success"
-                else:
-                    mes = "そのIDは存在しません。"
+            collection = conn['rakutan']
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
 
-                for row in results:
-                    # set value to rakutan_data
-                    for i, column in enumerate(self.columnNameRakutan):
-                        rakutan_data[column] = row[i]
+            rakutan_data = {}
 
-                return mes, rakutan_data
+            if count > 0:
+                mes = "success"
+            else:
+                mes = "そのIDは存在しません。"
 
-            except:
-                stderr(f"[error]get-by-id:Cannot #{search_id}")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+            for row in results:
+                # # set value to rakutan_data
+                rakutan_data = row
+
+            return mes, rakutan_data
+
+        except:
+            stderr(f"[error]get-by-id:Cannot #{search_id}")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def get_query_result(self, conn, searchWord):
         """
@@ -145,220 +146,264 @@ class DB:
         :param searchWord: str
         :return: List of lecture data
         """
-        with conn.cursor() as cur:
-            try:
-                sqlStr = """
-              SELECT
-              id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
-              FROM rakutan
-              WHERE (lecturename) ILIKE (%s)
-              """
-                cur.execute(sqlStr, (searchWord + "%",))
-                results = cur.fetchall()
-                rakutan_data = {}
+        try:
+            # sqlStr = """
+            #   SELECT
+            #   id, facultyname, lecturename, groups, credits, total_prev, accept_prev, total_prev2, accept_prev2, total_prev3, accept_prev3, url
+            #   FROM rakutan
+            #   WHERE (lecturename) ILIKE (%s)
+            #   """
+            query = {'lecturename': {'$regex': f'^{searchWord}', '$options': 'i'}}
 
-                if len(results) > 0:
-                    mes = "success"
-                else:
-                    mes = f"「{searchWord}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+            collection = conn['rakutan']
+            results = collection.find(filter=query, projection={'_id': False})
+            count = collection.count_documents(filter=query)
 
-                # set value to rakutan_data
-                for i, column in enumerate(self.columnNameRakutan):
-                    rakutan_data[column] = [row[i] for row in results]
+            rakutan_data = {}
+            mongoToList = []
 
-                return mes, rakutan_data
-            except:
-                stderr(f"[error]get-query-result:Cannot {searchWord}")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
+            if count > 0:
+                mes = "success"
+            else:
+                mes = f"「{searchWord}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+            for row in results:
+                mongoToList.append(row)
+
+            # set value to rakutan_data
+            for column in self.columnNameRakutan:
+                rakutan_data[column] = [row[column] for row in mongoToList]
+            return mes, rakutan_data
+        except:
+            stderr(f"[error]get-query-result:Cannot {searchWord}")
+            return "DB接続エラーです", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def get_userfav(self, conn, uid, lectureID="", types=""):
-        with conn.cursor() as cur:
-            try:
-                if types == "count":
-                    sqlStr = "SELECT lectureid, lecturename FROM userfav WHERE (uid = (%s))"
-                    cur.execute(sqlStr, (uid,))
-                else:
-                    sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s) and lectureid = (%s))"
-                    cur.execute(sqlStr, (uid, lectureID))
-                results = cur.fetchall()
+        try:
+            if types == "count":
+                query = {'uid': uid}
+                # sqlStr = "SELECT lectureid, lecturename FROM userfav WHERE (uid = (%s))"
+            else:
+                query = {'$and': [{'uid': uid}, {'lectureid': lectureID}]}
+                # sqlStr = "SELECT lectureid FROM userfav WHERE (uid = (%s) and lectureid = (%s))"
 
-                if len(results) > 0:
-                    mes = "already"
-                else:
-                    mes = "notyet"
-                if types == "count":
-                    fav_list = {}
-                    # set value to fav_list
-                    for i, column in enumerate(self.columnNameFav):
-                        fav_list[column] = [row[i] for row in results]
-                    mes = fav_list
+            collection = conn['userfav']
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
 
-                return mes
-            except:
-                stderr(f"[error]get-userfav:Cannot {lectureID}")
-                return "error"
-            finally:
-                if cur:
-                    cur.close()
-
-    def get_merge_list(self, conn):
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "SELECT search_id, url FROM urlmerge"
-                cur.execute(sqlStr)
-                results = cur.fetchall()
-
-                lecture_name = []
-                lecture_id = []
-                lecture_url = []
-
-                if len(results) > 0:
-                    mes = "success"
-                    for row in results:
-                        search_id = row[0]
-                        url = row[1]
-
-                        get_lecture = self.get_by_id(conn, search_id)[1]['lecturename']
-                        lecture_id.append(search_id)
-                        lecture_name.append(get_lecture)
-                        lecture_url.append(url)
-                else:
-                    mes = "error"
-
-                return mes, lecture_id, lecture_name, lecture_url
-            except:
-                stderr("[error]fetch-merge-list:Cannot fetch from DB")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
-
-    def get_omikuji(self, conn, types):
-        with conn.cursor() as cur:
-            try:
-                if types == "normal":
-                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
-                else:
-                    sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
-                cur.execute(sqlStr)
-                results = cur.fetchall()
+            if count > 0:
+                mes = "already"
+            else:
+                mes = "notyet"
+            if types == "count":
+                mongoToList = []
+                fav_list = {}
 
                 for row in results:
-                    omikujiID = row[0]
+                    mongoToList.append(row)
+                # set value to fav_list
+                for column in self.columnNameFav:
+                    fav_list[column] = [row[column] for row in mongoToList]
+                mes = fav_list
+                print(fav_list)
 
-                stderr(f"[success]omikuji:Omikuji {types}!")
-                return 'success', omikujiID
-            except:
-                stderr("[error]omikuji:Cannot get omikuji.")
-                return "DB接続エラーです", "exception"
-            finally:
-                if cur:
-                    cur.close()
+            return mes
+        except:
+            stderr(f"[error]get-userfav:Cannot {lectureID}")
+            return "error"
+        # finally:
+        #     if cur:
+        #         cur.close()
+
+    def get_merge_list(self, conn):
+        # with conn.cursor() as cur:
+        try:
+            query = {'search_id': {'$ne': ''}}
+            # sqlStr = "SELECT search_id, url FROM urlmerge"
+            collection = conn['urlmerge']
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
+
+            lecture_name = []
+            lecture_id = []
+            lecture_url = []
+
+            if count > 0:
+                mes = "success"
+                for row in results:
+                    search_id = row['id']
+                    url = row['url']
+
+                    get_lecture = self.get_by_id(conn, search_id)[1]['lecturename']
+                    lecture_id.append(search_id)
+                    lecture_name.append(get_lecture)
+                    lecture_url.append(url)
+            else:
+                mes = "error"
+
+            return mes, lecture_id, lecture_name, lecture_url
+        except:
+            stderr("[error]fetch-merge-list:Cannot fetch from DB")
+            return "DB接続エラーです", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
+
+    def get_omikuji(self, conn, types):
+        # with conn.cursor() as cur:
+        try:
+            if types == "normal":
+                query = {'$and': [{'facultyname': '国際高等教育院'}, {'accept_prev': {'$gt': 15}},
+                                  {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.8, '$total_prev']}]}}]}
+                # sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and accept_prev > 15 and accept_prev > 0.8*total_prev) order by random() limit 1"
+            else:
+                query = {'$and': [{'facultyname': '国際高等教育院'}, {'total_prev': {'$gt': 4}},
+                                  {'$expr': {'$lt': ['$accept_prev', {'$multiply': [0.31, '$total_prev']}]}}]}
+                # sqlStr = "select id from rakutan where (facultyname='国際高等教育院' and total_prev > 4 and accept_prev < 0.31 *total_prev) order by random() limit 1"
+            collection = conn['rakutan']
+            results = collection.find(filter=query, projection={'id': True})
+            count = collection.count_documents(filter=query)
+
+            omikujiID = random.choice([row['id'] for row in results])
+
+            stderr(f"[success]omikuji:Omikuji {types}!")
+            return 'success', omikujiID
+        except:
+            stderr("[error]omikuji:Cannot get omikuji.")
+            return "DB接続エラーです", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def add_to_db(self, conn, uid, types, lectureID="", lectureName=""):
         dates = str(datetime.datetime.now()).replace('.', '/')
         if types == "uid":
-            sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
+            query = {'uid': uid, 'register_time': dates}
+            collection = conn['usertable']
+            # sqlStr = "INSERT INTO usertable (uid,register_time) VALUES (%s,%s)"
+
         elif types == "fav":
             res = self.get_userfav(conn, uid, lectureID)
             if res == "already":
                 return "already"
-            sqlStr = "INSERT INTO userfav (uid,lectureid,lecturename) VALUES (%s,%s,%s)"
+            query = {'uid': uid, 'lectureid': lectureID, 'lecturename': lectureName}
+            collection = conn['userfav']
+            # sqlStr = "INSERT INTO userfav (uid,lectureid,lecturename) VALUES (%s,%s,%s)"
+
         else:
             return "invalid types"
 
-        with conn.cursor() as cur:
-            try:
-                if types == "uid":
-                    cur.execute(sqlStr, (uid, dates))
-                elif types == "fav":
-                    cur.execute(sqlStr, (uid, lectureID, lectureName))
-                return 'success'
-            except:
-                stderr("[error]addDB:Cannnot add to usertable/userfav.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        # with conn.cursor() as cur:
+        try:
+            results = collection.insert(query)
+            # count = collection.count_documents(filter=query)
+
+            return 'success'
+        except:
+            stderr("[error]addDB:Cannnot add to usertable/userfav.")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def update_db(self, conn, uid, value="", types=""):
-        with conn.cursor() as cur:
-            try:
-                if types == "count":
-                    sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (uid,))
-                elif types == "theme":
-                    sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
-                    cur.execute(sqlStr, (value, uid))
-                elif types == "url":
-                    sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
-                    cur.execute(sqlStr, (value, uid))
-                return 'success'
-            except:
-                stderr(f"[error]updateDB:Cannnot update [{types}].")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        dates = str(datetime.datetime.now()).replace('.', '/')
+        # with conn.cursor() as cur:
+        try:
+            if types == "count":
+                collection = conn['usertable']
+                collection.update({'uid': uid}, {'$inc': {'count': 1}})
+                # sqlStr = "UPDATE usertable SET count = count+1 WHERE (uid)=(%s)"
+                # cur.execute(sqlStr, (uid,))
+            elif types == "theme":
+                collection = conn['usertable']
+                collection.update({'uid': uid}, {'$set': {'color_theme': value}})
+                # sqlStr = "UPDATE usertable SET color_theme = (%s) WHERE (uid)=(%s)"
+                # cur.execute(sqlStr, (value, uid))
+            elif types == "url":
+                collection = conn['rakutan']
+                collection.update({'id': uid}, {'$set': {'url': value}})
+                # sqlStr = "UPDATE rakutan SET url = (%s) WHERE (id)=(%s)"
+                # cur.execute(sqlStr, (value, uid))
+            return 'success'
+        except:
+            stderr(f"[error]updateDB:Cannnot update [{types}].")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def delete_db(self, conn, search_id, uid="", types="", url=""):
-        with conn.cursor() as cur:
-            try:
-                if types == "fav":
-                    sqlStr = "DELETE FROM userfav WHERE (uid)=(%s) and (lectureid)=(%s)"
-                    cur.execute(sqlStr, (uid, search_id))
-                else:
-                    sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
-                    cur.execute(sqlStr, (search_id, url))
-                return 'success'
-            except:
-                stderr("[error]deleteDB:Cannnot delete urlmarge/userfav.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        # with conn.cursor() as cur:
+        try:
+            if types == "fav":
+                query = {'$and': [{'uid': uid}, {'lectureid': search_id}]}
+                collection = conn['userfav']
+                # sqlStr = "DELETE FROM userfav WHERE (uid)=(%s) and (lectureid)=(%s)"
+                # cur.execute(sqlStr, (uid, search_id))
+            else:
+                query = {'$and': [{'search_id': search_id}, {'url': url}]}
+                collection = conn['urlmerge']
+                # sqlStr = "DELETE FROM urlmerge WHERE (search_id)=(%s) and (url)=(%s)"
+                # cur.execute(sqlStr, (search_id, url))
+
+            results = collection.remove(query)
+
+            return 'success'
+        except:
+            stderr("[error]deleteDB:Cannnot delete urlmarge/userfav.")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+        # finally:
+
+    #     if cur:
+    #         cur.close()
 
     def kakomon_wait_for_merge(self, conn, received_message, uid):
         dates = str(datetime.datetime.now()).replace('.', '/')
         search_id = received_message[2:7]
         url = received_message[8:].strip()
 
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
-                cur.execute(sqlStr, (search_id, url, uid, dates))
-                return 'success'
-            except:
-                stderr("[error]kakomon-merge:Cannot insert.")
-                return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
-            finally:
-                if cur:
-                    cur.close()
+        # with conn.cursor() as cur:
+        try:
+            query = {'search_id': search_id, 'url': url, 'uid': uid, 'send_time': dates}
+            # sqlStr = "INSERT INTO urlmerge (search_id, url, uid, send_time) VALUES (%s,%s,%s,%s)"
+            collection = conn['urlmerge']
+            results = collection.insert(query)
+            return 'success'
+        except:
+            stderr("[error]kakomon-merge:Cannot insert.")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+        # finally:
+        #     if cur:
+        #         cur.close()
 
     def isinDB(self, conn, uid):
-        with conn.cursor() as cur:
-            try:
-                sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
-                cur.execute(sqlStr, (uid,))
-                results = cur.fetchall()
+        # with conn.cursor() as cur:
+        try:
+            # sqlStr = "SELECT uid,color_theme FROM usertable WHERE (uid) = (%s)"
+            query = {'uid': uid}
+            collection = conn['usertable']
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
 
-                if len(results) > 0:
-                    color_theme = results[0][1]
-                else:
-                    self.add_to_db(conn, uid, "uid")
-                    color_theme = "default"
-
-                return True, color_theme
-            except:
-                stderr(f"[error]isinDB:Cannnot isin {uid}")
+            if count > 0:
+                # color_theme = results[0][1]
+                for row in results:
+                    color_theme = row['color_theme']
+            else:
+                self.add_to_db(conn, uid, "uid")
                 color_theme = "default"
-                return False, color_theme
-            finally:
-                if cur:
-                    cur.close()
+
+            return True, color_theme
+        except:
+            stderr(f"[error]isinDB:Cannnot isin {uid}")
+            color_theme = "default"
+            return False, color_theme
+        # finally:
+        # if cur:
+        #     cur.close()
 
 
 class Prepare:
@@ -450,7 +495,8 @@ class Prepare:
         # modify url
         kakomon_symbol = body_contents[0]['contents'][6]['contents'][1]
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
-        if array['url'] is not None:
+
+        if array['url'] != "":
             kakomon_symbol['text'] = '〇'
             kakomon_symbol['color'] = '#0fd142'
             kakomon_link['text'] = 'リンク'
@@ -563,7 +609,7 @@ class Prepare:
 
     def isSet(self, value):
         """Return '---' if value is None type."""
-        if value is None:
+        if value == "":
             return '---'
         else:
             return value
@@ -741,8 +787,8 @@ def hello_world():
 def push_flex():
     prepare = Prepare()
     db = DB()
-    with db.connect() as conn:
-        result = db.get_merge_list(conn)
+    conn = db.connect()
+    result = db.get_merge_list(conn)
 
     if result[0] == 'success':
         lecture_id = result[1]
@@ -790,75 +836,76 @@ def handle_message(event):
     db = DB()
     prepare = Prepare(received_message, token)
 
-    with db.connect() as conn:
-        check_user = db.isinDB(conn, uid)
-        if check_user[0]:
-            # add 1 to search counter
-            db.update_db(conn, uid, types='count')
-        color_theme = check_user[1]
+    # with db.connect() as conn:
+    conn = db.connect()
+    check_user = db.isinDB(conn, uid)
+    if check_user[0]:
+        # add 1 to search counter
+        db.update_db(conn, uid, types='count')
+    color_theme = check_user[1]
 
-        # load reserved command dict
-        response = module.response.command
+    # load reserved command dict
+    response = module.response.command
 
-        if received_message in response:
-            # prepare params to pass
-            lists = [uid, received_message, color_theme]
+    if received_message in response:
+        # prepare params to pass
+        lists = [uid, received_message, color_theme]
 
-            # 1.Check if reserved word is sent.
-            response[received_message](token, lists)
-        else:
-            # 2.Check if kakomon URL is sent:
-            if prepare.isURLID(received_message):
-                if prepare.isURL(received_message):
-                    fetch_result = db.get_by_id(conn, received_message[2:7])
-                    if fetch_result[0] == 'success':
-                        fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
-                        if fetch_result == 'success':
-                            send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
-                        else:
-                            send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
-                    else:
-                        send.send_text("指定された講義IDは存在しません。")
-                else:
-                    send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
-
-            # 3.Check if ID is sent:
-            elif prepare.isID(received_message):
-                fetch_result = db.get_by_id(conn, received_message[1:6])
-                fetch_fav = db.get_userfav(conn, uid, received_message[1:6])
+        # 1.Check if reserved word is sent.
+        response[received_message](token, lists)
+    else:
+        # 2.Check if kakomon URL is sent:
+        if prepare.isURLID(received_message):
+            if prepare.isURL(received_message):
+                fetch_result = db.get_by_id(conn, received_message[2:7])
                 if fetch_result[0] == 'success':
-                    # get lectureinfo list
-                    array = fetch_result[1]
+                    fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
+                    if fetch_result == 'success':
+                        send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
+                    else:
+                        send.send_text("DB接続エラーが発生しました。時間を空けてお試しください。")
+                else:
+                    send.send_text("指定された講義IDは存在しません。")
+            else:
+                send.send_text("過去問リンクは http:// または https:// から始まるものを入力してください。")
+
+        # 3.Check if ID is sent:
+        elif prepare.isID(received_message):
+            fetch_result = db.get_by_id(conn, received_message[1:6])
+            fetch_fav = db.get_userfav(conn, uid, received_message[1:6])
+            if fetch_result[0] == 'success':
+                # get lectureinfo list
+                array = fetch_result[1]
+                json_content = prepare.rakutan_detail(array, fetch_fav)
+                send.send_result(json_content, received_message, 'rakutan_detail')
+            else:
+                send.send_text(fetch_result[0])
+
+        # 4. Check if lecturename is sent:
+        else:
+            fetch_result = db.get_query_result(conn, received_message)
+            stderr(f"[success]{uid}: {received_message}")
+            if fetch_result[0] == 'success':
+                array = fetch_result[1]
+                record_count = len(array['id'])
+                # if query result is 1:
+                if record_count == 1:
+
+                    array = prepare.list_to_str(array)
+                    fetch_fav = db.get_userfav(conn, uid, array['id'])
+
                     json_content = prepare.rakutan_detail(array, fetch_fav)
                     send.send_result(json_content, received_message, 'rakutan_detail')
+                # if query result is over 100:
+                elif record_count > 100:
+                    send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
+                # if query result is between 2 and 100:
                 else:
-                    send.send_text(fetch_result[0])
-
-            # 4. Check if lecturename is sent:
+                    json_contents = prepare.search_result(array, received_message, record_count)
+                    send.send_result(json_contents, received_message, 'search_result')
+            # Send error message(s)
             else:
-                fetch_result = db.get_query_result(conn, received_message)
-                stderr(f"[success]{uid}: {received_message}")
-                if fetch_result[0] == 'success':
-                    array = fetch_result[1]
-                    record_count = len(array['id'])
-                    # if query result is 1:
-                    if record_count == 1:
-
-                        array = prepare.list_to_str(array)
-                        fetch_fav = db.get_userfav(conn, uid, array['id'])
-
-                        json_content = prepare.rakutan_detail(array, fetch_fav)
-                        send.send_result(json_content, received_message, 'rakutan_detail')
-                    # if query result is over 100:
-                    elif record_count > 100:
-                        send.send_text(f"「{received_message}」は{record_count}件あります。絞ってください。")
-                    # if query result is between 2 and 100:
-                    else:
-                        json_contents = prepare.search_result(array, received_message, record_count)
-                        send.send_result(json_contents, received_message, 'search_result')
-                # Send error message(s)
-                else:
-                    send.send_text(fetch_result[0])
+                send.send_text(fetch_result[0])
 
 
 # Handle Postback message
@@ -870,6 +917,7 @@ def handle_message(event):
     send = Send(token)
     prepare = Prepare("postback", token)
     db = DB()
+    conn = db.connect()
 
     params = urllib.parse.parse_qs(received_postback)
     types = params.get('type')[0]
@@ -883,60 +931,62 @@ def handle_message(event):
         send.send_multiline_text(message_list)
 
     elif types == 'fav':
-        with db.connect() as conn:
-            res_add = ""
-            res_delete = ""
-            getFav = db.get_userfav(conn, uid, search_id)
+        # with db.connect() as conn:
+        res_add = ""
+        res_delete = ""
+        getFav = db.get_userfav(conn, uid, search_id)
 
-            # if user already faved
-            if getFav == "already":
-                res_delete = db.delete_db(conn, search_id, uid, 'fav')
-                if res_delete == "success":
-                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
-                else:
-                    send.send_text("お気に入りを削除できませんでした。")
-
-            # if user is not faved
-            elif getFav == "notyet":
-                res_count = db.get_userfav(conn, uid, 12345, "count")
-                count = len(res_count)
-                if count >= 50:
-                    send.send_text("お気に入り登録が上限に達しました。")
-                else:
-                    res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
-                    if res_add == "success":
-                        text = f"「{lectureName[0]}」をお気に入り登録しました！"
-                    else:
-                        send.send_text("お気に入りを登録できませんでした。")
-
+        # if user already faved
+        if getFav == "already":
+            res_delete = db.delete_db(conn, search_id, uid, 'fav')
+            if res_delete == "success":
+                text = f"「{lectureName[0]}」をお気に入りから外しました！"
             else:
-                send.send_text("お気に入り取得中にエラーが発生しました。")
+                send.send_text("お気に入りを削除できませんでした。")
 
-            if res_add == "success" or res_delete == "success":
-                fetch_result = db.get_by_id(conn, search_id)
-                fetch_fav = db.get_userfav(conn, uid, search_id)
-                if fetch_result[0] == 'success':
-                    # get lectureinfo list
-                    array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array, fetch_fav, "default")
-                    f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
-                    json_text = [json.load(f)]
-                    json_text[0]['body']['contents'][0]['text'] = text
-
-                    json_text.append(json_content[0])
-                    send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
+        # if user is not faved
+        elif getFav == "notyet":
+            res_count = db.get_userfav(conn, uid, 12345, "count")
+            count = len(res_count)
+            if count >= 50:
+                send.send_text("お気に入り登録が上限に達しました。")
+            else:
+                res_add = db.add_to_db(conn, uid, 'fav', search_id, lectureName[0])
+                if res_add == "success":
+                    text = f"「{lectureName[0]}」をお気に入り登録しました！"
                 else:
-                    send.send_text(fetch_result[0])
+                    send.send_text("お気に入りを登録できませんでした。")
+
+        else:
+            send.send_text("お気に入り取得中にエラーが発生しました。")
+
+        if res_add == "success" or res_delete == "success":
+            fetch_result = db.get_by_id(conn, search_id)
+            fetch_fav = db.get_userfav(conn, uid, search_id)
+            if fetch_result[0] == 'success':
+                # get lectureinfo list
+                array = fetch_result[1]
+                json_content = prepare.rakutan_detail(array, fetch_fav, "default")
+                f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
+                json_text = [json.load(f)]
+                json_text[0]['body']['contents'][0]['text'] = text
+
+                json_text.append(json_content[0])
+                send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
+            else:
+                send.send_text(fetch_result[0])
     elif types == "favdel":
-        with db.connect() as conn:
-            getFav = db.get_userfav(conn, uid, search_id)
-            if getFav == "already":
-                res_delete = db.delete_db(conn, search_id, uid, 'fav')
-                if res_delete == "success":
-                    text = f"「{lectureName[0]}」をお気に入りから外しました！"
-                else:
-                    text = "お気に入りを削除できませんでした。"
-                send.send_text(text)
+        # with db.connect() as conn:
+        getFav = db.get_userfav(conn, uid, search_id)
+        if getFav == "already":
+            res_delete = db.delete_db(conn, search_id, uid, 'fav')
+            if res_delete == "success":
+                text = f"「{lectureName[0]}」をお気に入りから外しました！"
+            else:
+                text = "お気に入りを削除できませんでした。"
+            send.send_text(text)
+        elif getFav == "notyet":
+            send.send_text(f"「{lectureName[0]}」は既に削除しているかお気に入り登録されていません。")
 
     # send small bubble
     elif types == "icon":
@@ -946,25 +996,25 @@ def handle_message(event):
 
     # for admin only #
     elif types == 'decline':
-        with db.connect() as conn:
-            result = db.delete_db(conn, search_id, url[0])
-            if result == 'success':
-                db.delete_db(conn, search_id, url[0])
-                message = f"[#{search_id}] を削除しました。"
-            else:
-                message = f"[#{search_id}] の削除に失敗しました。"
-            send.push_text(message)
+        # with db.connect() as conn:
+        result = db.delete_db(conn, search_id, url[0])
+        if result == 'success':
+            db.delete_db(conn, search_id, url[0])
+            message = f"[#{search_id}] を削除しました。"
+        else:
+            message = f"[#{search_id}] の削除に失敗しました。"
+        send.push_text(message)
 
     # for admin only #
     elif types == 'merge':
-        with db.connect() as conn:
-            result = db.update_db(conn, search_id, url[0], "url")
-            if result == 'success':
-                db.delete_db(conn, search_id, url[0])
-                message = f"[#{search_id}] をマージしました。"
-            else:
-                message = f"[#{search_id}] のマージに失敗しました。"
-            send.push_text(message)
+        # with db.connect() as conn:
+        result = db.update_db(conn, search_id, url[0], "url")
+        if result == 'success':
+            db.delete_db(conn, search_id, url[0])
+            message = f"[#{search_id}] をマージしました。"
+        else:
+            message = f"[#{search_id}] のマージに失敗しました。"
+        send.push_text(message)
 
 
 if __name__ == "__main__":
