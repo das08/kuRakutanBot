@@ -61,6 +61,11 @@ def normalOmikuji(token, lists):
     prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0])
 
 
+def shrineOmikuji(token, lists):
+    color_theme = lists[2]
+    prepareOmikuji(token, color_theme, 'shrine', '人社おみくじ結果', lists[0])
+
+
 def oniOmikuji(token, lists):
     color_theme = lists[2]
     prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0])
@@ -78,7 +83,7 @@ def changeTheme(token, lists):
 def myUID(token, lists):
     send = ap.Send(token)
     uid = lists[0]
-    send.send_text(f"Your uid: {uid}")
+    send.send_text(uid)
 
 
 def sorry(token, lists):

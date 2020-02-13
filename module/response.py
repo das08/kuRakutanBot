@@ -30,6 +30,10 @@ command = {
     "おみくじ": fn.normalOmikuji,
     "楽単": fn.normalOmikuji,
 
+    "人社おみくじ": fn.shrineOmikuji,
+    "おみくじ 人社": fn.shrineOmikuji,
+    "人社": fn.shrineOmikuji,
+
     "鬼単おみくじ": fn.oniOmikuji,
     "おみくじ 鬼単": fn.oniOmikuji,
     "鬼単": fn.oniOmikuji,
@@ -46,7 +50,7 @@ command = {
     "@set:default": fn.setRichMenu,
 
     "@theme:default": fn.changeTheme,
-    "@theme:yellow": fn.changeTheme,
+    "@theme:yellow": fn.sorry,
     "@theme:blue": fn.sorry,
     "@theme:gold": fn.unavailable
 }

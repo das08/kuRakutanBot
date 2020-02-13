@@ -232,6 +232,9 @@ class DB:
             if types == "normal":
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'accept_prev': {'$gt': 15}},
                                   {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.8, '$total_prev']}]}}]}
+            elif types == "shrine":
+                query = {'$and': [{'groups': '人社'}, {'accept_prev': {'$gt': 15}},
+                                  {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.7, '$total_prev']}]}}]}
             else:
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'total_prev': {'$gt': 4}},
                                   {'$expr': {'$lt': ['$accept_prev', {'$multiply': [0.31, '$total_prev']}]}}]}
@@ -251,7 +254,7 @@ class DB:
             dates = str(datetime.datetime.now()).replace('.', '/')
             if types == "uid":
                 collection = conn['usertable']
-                query = {'uid': uid, 'register_time': dates}
+                query = {'uid': uid, 'rich_menu': 'main', 'color_theme': 'default', 'register_time': dates}
 
             elif types == "fav":
                 collection = conn['userfav']
