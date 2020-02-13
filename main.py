@@ -393,6 +393,9 @@ class Prepare:
         elif omikuji == "oni":
             header_contents[0]['contents'][1]['text'] = "鬼単おみくじ結果"
             header_contents[0]['contents'][1]['color'] = "#6d7bff"
+        elif omikuji == "shrine":
+            header_contents[0]['contents'][1]['text'] = "人社おみくじ結果"
+            header_contents[0]['contents'][1]['color'] = "#cc913e"
 
         # adjust font size if too long
         length = self.lecturename_len(array['lecturename'])

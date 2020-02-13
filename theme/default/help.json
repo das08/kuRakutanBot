@@ -13,6 +13,12 @@
         "align": "center"
       },
       {
+        "type": "text",
+        "text": "↓以下の太字をタップしてください↓",
+        "size": "sm",
+        "align": "center"
+      },
+      {
         "type": "separator",
         "margin": "sm"
       },
@@ -42,7 +48,7 @@
               },
               {
                 "type": "text",
-                "text": "このメッセージです。",
+                "text": "このヘルプメッセージです。",
                 "size": "sm",
                 "color": "#111111",
                 "align": "start",
@@ -114,7 +120,7 @@
             "contents": [
               {
                 "type": "text",
-                "text": "・テーマ変更",
+                "text": "・お気に入り",
                 "size": "sm",
                 "align": "start",
                 "weight": "bold",
@@ -123,12 +129,12 @@
                 "action": {
                   "type": "message",
                   "label": "action",
-                  "text": "テーマ変更"
+                  "text": "きせかえ"
                 }
               },
               {
                 "type": "text",
-                "text": "色テーマを変更できます。",
+                "text": "お気に入り登録した講義の一覧が表示されます。",
                 "size": "sm",
                 "color": "#111111",
                 "align": "start",
@@ -171,45 +177,28 @@
           },
           {
             "type": "box",
-            "layout": "horizontal",
-            "margin": "xs",
-            "contents": [
-              {
-                "type": "text",
-                "text": "（以下のコマンドは追加予定です）",
-                "size": "sm",
-                "align": "center",
-                "weight": "bold",
-                "flex": 1,
-                "decoration": "underline"
-              }
-            ]
-          },
-          {
-            "type": "box",
             "layout": "vertical",
             "margin": "xs",
             "contents": [
               {
                 "type": "text",
-                "text": "・CB",
+                "text": "・お問い合わせ",
                 "size": "sm",
                 "align": "start",
                 "weight": "bold",
                 "flex": 1,
                 "gravity": "center",
-                "color": "#aaaaaa",
                 "action": {
                   "type": "message",
                   "label": "action",
-                  "text": "CB"
+                  "text": "お問い合わせ"
                 }
               },
               {
                 "type": "text",
-                "text": "ChotBetter掲載の講義が見れます。",
+                "text": "お問い合わせページが表示されます。",
                 "size": "sm",
-                "color": "#aaaaaa",
+                "color": "#111111",
                 "align": "start",
                 "flex": 2,
                 "wrap": true,
@@ -227,14 +216,14 @@
     "contents": [
       {
         "type": "text",
-        "text": "(Tips) %を頭に付けて検索すると部分一致検索になります。",
+        "text": "【検索のヒント】 %を頭に付けて検索すると部分一致検索になります。",
         "wrap": true,
         "size": "xs",
         "color": "#aaaaaa"
       },
       {
         "type": "text",
-        "text": "例えば「%電子工学」と検索すると「電気電子工学」もヒットします。",
+        "text": "例えば「%地理」と検索すると「自然地理学」もヒットします。",
         "size": "xs",
         "wrap": true,
         "color": "#aaaaaa"
