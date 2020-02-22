@@ -104,13 +104,13 @@ class DB:
         self.columnNameFav = ['lectureid', 'lecturename']
 
     def connect(self):
-        """Connect to database"""
+        """Connect to mongo database"""
         uri = f"mongodb://{mongo_user}:{mongo_pass}@{mongo_host}:{mongo_port}"
         client = MongoClient(uri)
         return client
 
     def get_by_id(self, conn, search_id):
-        """Get lecture data that matches lecture id from database."""
+        """Get lecture info that matches lecture id"""
         try:
             collection = conn['rakutan']
             rakutan_data = {}
@@ -124,8 +124,8 @@ class DB:
             else:
                 mes = "そのIDは存在しません。"
 
+            # set value to rakutan_data
             for row in results:
-                # set value to rakutan_data
                 rakutan_data = row
 
             return mes, rakutan_data
@@ -134,42 +134,42 @@ class DB:
             stderr(f"[error]get-by-id:Cannot #{search_id}")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
-    def get_query_result(self, conn, searchWord):
-        """
-        Get lecture list that matches search_word from database.
-        Default: forward match
-        :param searchWord: str
-        :return: List of lecture data
-        """
+    def get_query_result(self, conn, search_word):
+        """Get lecture list that matches search_word"""
         try:
             rakutan_data = {}
-            mongoToList = []
+            temp_list = []
             collection = conn['rakutan']
 
-            query = {'lecturename': {'$regex': f'^{searchWord}', '$options': 'i'}}
+            query = {'lecturename': {'$regex': f'^{search_word}', '$options': 'i'}}
             results = collection.find(filter=query, projection={'_id': False})
             count = collection.count_documents(filter=query)
 
             if count > 0:
                 mes = "success"
             else:
-                mes = f"「{searchWord}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+                mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
             for row in results:
-                mongoToList.append(row)
+                temp_list.append(row)
 
             # set value to rakutan_data
             for column in self.columnNameRakutan:
-                rakutan_data[column] = [row[column] for row in mongoToList]
+                rakutan_data[column] = [row[column] for row in temp_list]
 
             return mes, rakutan_data
         except:
-            stderr(f"[error]get-query-result:Cannot {searchWord}")
+            stderr(f"[error]get-query-result:Cannot {search_word}")
             return "DB接続エラーです", "exception"
 
     def get_userfav(self, conn, uid, lectureID="", types=""):
+        """
+        Get favorite list.
+        types = "count" -> Get number of favs.
+        types = "" -> Check if user has faved specific lecture.
+        """
         try:
             fav_list = {}
-            mongoToList = []
+            temp_list = []
             collection = conn['userfav']
 
             if types == "count":
@@ -186,11 +186,11 @@ class DB:
                 mes = "notyet"
             if types == "count":
                 for row in results:
-                    mongoToList.append(row)
+                    temp_list.append(row)
 
                 # set value to fav_list
                 for column in self.columnNameFav:
-                    fav_list[column] = [row[column] for row in mongoToList]
+                    fav_list[column] = [row[column] for row in temp_list]
                 mes = fav_list
             return mes
         except:
@@ -198,6 +198,7 @@ class DB:
             return "error"
 
     def get_merge_list(self, conn):
+        """Get merge list. (NOT WORKING!)"""
         lecture_name = []
         lecture_id = []
         lecture_url = []
@@ -226,6 +227,12 @@ class DB:
             return "DB接続エラーです", "exception"
 
     def get_omikuji(self, conn, types):
+        """
+        Get omikuji
+        types = "normal" -> Get rakutan(easy) omikuji.
+        types = "shrine" -> Get jinsha(humanities and social science) omikuji.
+        types = "" -> Get onitan(difficult) omikuji.
+        """
         try:
             collection = conn['rakutan']
 
@@ -244,12 +251,14 @@ class DB:
             omikujiID = random.choice([row['id'] for row in results])
 
             stderr(f"[success]omikuji:Omikuji {types}!")
+
             return 'success', omikujiID
         except:
             stderr("[error]omikuji:Cannot get omikuji.")
             return "DB接続エラーです", "exception"
 
     def add_to_db(self, conn, uid, types, lectureID="", lectureName=""):
+        """Add something to database"""
         try:
             dates = str(datetime.datetime.now()).replace('.', '/')
             if types == "uid":
@@ -267,12 +276,14 @@ class DB:
                 return "invalid types"
 
             results = collection.insert(query)
+
             return 'success'
         except:
             stderr("[error]addDB:Cannnot add to usertable/userfav.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
     def update_db(self, conn, uid, value="", types=""):
+        """Update something on database"""
         try:
             if types == "count":
                 collection = conn['usertable']
@@ -304,20 +315,24 @@ class DB:
             stderr("[error]deleteDB:Cannnot delete urlmarge/userfav.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
-    def kakomon_wait_for_merge(self, conn, received_message, uid):
+    def add_to_mergelist(self, conn, received_message, uid):
+        """Add kakomon url to merge-waiting-list"""
         dates = str(datetime.datetime.now()).replace('.', '/')
         search_id = received_message[2:7]
         url = received_message[8:].strip()
         try:
             collection = conn['urlmerge']
             query = {'search_id': search_id, 'url': url, 'uid': uid, 'send_time': dates}
+
             results = collection.insert(query)
+
             return 'success'
         except:
             stderr("[error]kakomon-merge:Cannot insert.")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
     def isinDB(self, conn, uid):
+        """Check if user is registered in database"""
         try:
             collection = conn['usertable']
             query = {'uid': uid}
@@ -514,25 +529,17 @@ class Prepare:
         return self.json_contents
 
     def isID(self, text):
-        """
-        Checks if received text is in ID-format or not. Has to start with sharp.
-        :param text: received_text
-        :return: Bool
-        """
+        """Check if received text is in ID-format or not. Has to start with sharp."""
         if len(text) == 6 and (text[0] == "#" or text[0] == "＃") and text[1:5].isdigit():
             return True
 
     def isURLID(self, text):
-        """
-        Checks if received text is in URLID-format or not. Has to start and end with brackets and include sharp-id.
-        :param text: received_text
-        :return: Bool
-        """
+        """Check if received text is in URLID-format or not. Has to start and end with brackets and include sharp-id."""
         if text[0] == "[" and (text[1] == "#" or text[1] == "＃") and text[7] == "]" and text[2:7].isdigit():
             return True
 
     def isURL(self, text):
-        """Checks if received text is in URL-format or not. Has to start with http:// or https://"""
+        """Check if received url is in URL-format or not. Has to start with http:// or https://"""
         # regex for judging URL format.
         pattern = "https?://[\w/:%#\$&\?\(\)~\.=\+\-]+"
         url = text[8:].strip()
@@ -543,7 +550,7 @@ class Prepare:
             return False
 
     def isSet(self, value):
-        """Return '---' if value is None type."""
+        """Return '---' if value is empty string."""
         if value == "":
             return '---'
         else:
@@ -568,7 +575,7 @@ class Prepare:
             return round(100 * accepted / total, 1)
 
     def rakutan_percentage(self, array):
-        """Returns percentage for judging rakurtan"""
+        """Return percentage for judging rakutan"""
         if array['total_prev'] != 0:
             percent = round(100 * array['accept_prev'] / array['total_prev'], 1)
         elif array['total_prev2'] != 0:
@@ -578,7 +585,7 @@ class Prepare:
         return percent
 
     def lecturename_len(self, text):
-        """Find length of lecturename based on unicode"""
+        """Find length of lecturename based on unicode bites"""
         length = 0
         for c in text:
             if unicodedata.east_asian_width(c) in 'FWA':
@@ -588,7 +595,7 @@ class Prepare:
         return length
 
     def merge_url(self, lecture_id, lecture_name, lecture_url):
-        """For ADMIN. Prepares flex message for merging/declining kakomon url."""
+        """FOR ADMIN. Prepares flex message for merging/declining kakomon url."""
         f = open(f'./theme/etc/merge.json', 'r', encoding='utf-8')
         json_content = json.load(f)
 
@@ -796,7 +803,7 @@ def handle_message(event):
                 if prepare.isURL(received_message):
                     fetch_result = db.get_by_id(conn, received_message[2:7])
                     if fetch_result[0] == 'success':
-                        fetch_result = db.kakomon_wait_for_merge(conn, received_message, uid)
+                        fetch_result = db.add_to_mergelist(conn, received_message, uid)
                         if fetch_result == 'success':
                             send.send_text("過去問リンクの提供ありがとうございます！確認ができ次第反映されます。")
                         else:
