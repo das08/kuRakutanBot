@@ -5,3 +5,5 @@ setting.py
 __pycache__
 mongo.py
 key
+.DS_Store
+.idea
