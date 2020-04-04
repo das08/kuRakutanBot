@@ -141,7 +141,11 @@ class DB:
             temp_list = []
             collection = conn['rakutan']
 
-            query = {'lecturename': {'$regex': f'^{search_word}', '$options': 'i'}}
+            if search_word[0] == '%':
+                query = {'lecturename': {'$regex': f'{search_word[1:]}', '$options': 'i'}}
+            else:
+                query = {'lecturename': {'$regex': f'^{search_word}', '$options': 'i'}}
+
             results = collection.find(filter=query, projection={'_id': False})
             count = collection.count_documents(filter=query)
 
@@ -870,11 +874,12 @@ def handle_message(event):
     with db.connect() as client:
         conn = client[mongo_db]
 
-        # send template for sending kakomon url
+        # process event when user pushes LINK ADD button
         if types == 'url':
             message_list = ["下の講義IDをそのままコピーし、その後ろに続けて過去問URLを貼り付けて送信してください。", f"[#{search_id}]\n"]
             send.send_multiline_text(message_list)
 
+        # process event when user pushes STAR button
         elif types == 'fav':
             res_add = ""
             res_delete = ""
@@ -887,10 +892,9 @@ def handle_message(event):
                     text = f"「{lectureName[0]}」をお気に入りから外しました！"
                 else:
                     send.send_text("お気に入りを削除できませんでした。")
-
             # if user is not faved
             elif getFav == "notyet":
-                res_count = db.get_userfav(conn, uid, 12345, "count")
+                res_count = db.get_userfav(conn, uid, '12345', "count")
                 count = len(res_count)
                 if count >= 50:
                     send.send_text("お気に入り登録が上限に達しました。")
@@ -900,7 +904,6 @@ def handle_message(event):
                         text = f"「{lectureName[0]}」をお気に入り登録しました！"
                     else:
                         send.send_text("お気に入りを登録できませんでした。")
-
             else:
                 send.send_text("お気に入り取得中にエラーが発生しました。")
 
@@ -919,6 +922,8 @@ def handle_message(event):
                     send.send_result(json_text, 'postback', f"「{lectureName[0]}」のらくたん情報")
                 else:
                     send.send_text(fetch_result[0])
+
+        # process event when user pushes X button
         elif types == "favdel":
             getFav = db.get_userfav(conn, uid, search_id)
             if getFav == "already":
@@ -931,7 +936,7 @@ def handle_message(event):
             elif getFav == "notyet":
                 send.send_text(f"「{lectureName[0]}」は既に削除しているかお気に入り登録されていません。")
 
-        # send small bubble
+        # process event when user pushes MAGNIFYING GLASS button
         elif types == "icon":
             f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
             json_content = [json.load(f)]
