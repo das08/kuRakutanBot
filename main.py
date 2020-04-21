@@ -40,6 +40,7 @@ mongo_db = os.environ["mongo_db"]
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 color_theme = ""
+ENABLE_TWEET_SHARE = True
 
 
 class LoadJSON(object):
@@ -440,10 +441,12 @@ class Prepare:
         judge = ['SSS', 'SS', 'S', 'A', 'B', 'C', 'D', 'F']
         judge_color = ['#c3c45b', '#c3c45b', '#c3c45b', '#cf2904', '#098ae0', '#f48a1c', '#8a30c9', '#837b8a']
         judge_list_data = {k: (v1, v2) for k, v1, v2 in zip(percent, judge, judge_color)}
+        judgeSymbol = "---"
         for key, value in judge_list_data.items():
             if rakutan_percent >= key:
+                judgeSymbol = value[0]
                 judge_view = body_contents[0]['contents'][5]['contents'][1]
-                judge_view['text'] = f"{value[0]}　"
+                judge_view['text'] = f"{judgeSymbol}　"
                 judge_view['color'] = f"{value[1]}"
                 break
         # modify url
@@ -462,6 +465,26 @@ class Prepare:
             url_provide_template['data'] += str(array['id'])
             kakomon_link['action'] = url_provide_template
             kakomon_link['text'] = '追加する'
+
+        if ENABLE_TWEET_SHARE:
+            # make KKK shorter
+            if array['facultyname'] == "国際高等教育":
+                facultyName = "般教"
+            else:
+                facultyName = array['facultyname']
+
+            # adjust search type
+            if omikuji == "normal":
+                types = "rakutan"
+            elif omikuji == "oni":
+                types = "onitan"
+            elif omikuji == "shrine":
+                types = "jinsha"
+            else:
+                types = "normal"
+
+            tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]['action']['uri']
+            tweet_share_uri += f"get?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}"
 
         return [self.json_content]
 

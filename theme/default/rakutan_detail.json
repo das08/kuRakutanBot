@@ -256,6 +256,30 @@
                 }
               }
             ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "filler",
+                "flex": 4
+              },
+              {
+                "type": "image",
+                "url": "https://das82.com/images/tweet.png",
+                "size": "xs",
+                "aspectRatio": "8:3",
+                "action": {
+                  "type": "uri",
+                  "label": "tweet",
+                  "uri": "https://ku-rakutan.das82.com/",
+                  "altUri": {
+                    "desktop": "https://ku-rakutan.das82.com/"
+                  }
+                }
+              }
+            ]
           }
         ]
       },
