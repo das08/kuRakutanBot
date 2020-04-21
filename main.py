@@ -14,6 +14,7 @@ import math
 import copy
 import unicodedata
 import urllib
+import urllib.parse
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -483,8 +484,13 @@ class Prepare:
             else:
                 types = "normal"
 
-            tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]['action']['uri']
-            tweet_share_uri += f"get?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}"
+            param = urllib.parse.quote(f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}")
+
+            tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]
+            tweet_share_uri['action']['uri'] = f"https://ku-rakutan.das82.com/{param}"
+
+            # tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]['action']['uri']
+            # tweet_share_uri += f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}"
 
         return [self.json_content]
 
