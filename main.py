@@ -469,7 +469,7 @@ class Prepare:
 
         if ENABLE_TWEET_SHARE:
             # make KKK shorter
-            if array['facultyname'] == "国際高等教育":
+            if array['facultyname'] == "国際高等教育院":
                 facultyName = "般教"
             else:
                 facultyName = array['facultyname']
@@ -484,13 +484,10 @@ class Prepare:
             else:
                 types = "normal"
 
-            param = urllib.parse.quote(f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}")
+            param = urllib.parse.quote(f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}", safe="=&?")
 
             tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]
             tweet_share_uri['action']['uri'] = f"https://ku-rakutan.das82.com/{param}"
-
-            # tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]['action']['uri']
-            # tweet_share_uri += f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}"
 
         return [self.json_content]
 
