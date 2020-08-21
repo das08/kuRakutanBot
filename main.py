@@ -494,7 +494,15 @@ class Prepare:
             else:
                 types = "normal"
 
-            param = urllib.parse.quote(f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}", safe="=&?")
+            urlParam = f"gen?lecname={array['lecturename']}&facname={facultyName}&judge={judgeSymbol}&type={types}"
+            for year in range(1, 4):  # [1, 3] inclusive
+                if year == 1:
+                    _year = ""
+                else:
+                    _year = str(year)
+                urlParam += f"&a{year}={array[f'accept_prev{_year}']}&s{year}={array[f'total_prev{_year}']}"
+
+            param = urllib.parse.quote(urlParam, safe="=&?")
 
             tweet_share_uri = body_contents[0]['contents'][7]['contents'][1]
             tweet_share_uri['action']['uri'] = f"https://ku-rakutan.das82.com/{param}"
