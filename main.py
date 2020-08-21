@@ -40,13 +40,17 @@ mongo_db = os.environ["mongo_db"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
+
+# ##### SETTINGS ##### #
 color_theme = ""
 THIS_YEAR = 2020
+RAKUTAN_COLLECTION = "rakutan2020"
 ENABLE_TWEET_SHARE = False
 if ENABLE_TWEET_SHARE:
     rakutan_json_filepath = 'rakutan_detail_tweet.json'
 else:
     rakutan_json_filepath = 'rakutan_detail.json'
+# #################### #
 
 
 class LoadJSON(object):
@@ -119,7 +123,7 @@ class DB:
     def get_by_id(self, conn, search_id):
         """Get lecture info that matches lecture id"""
         try:
-            collection = conn['rakutan']
+            collection = conn[RAKUTAN_COLLECTION]
             rakutan_data = {}
 
             query = {'id': int(search_id)}
@@ -146,7 +150,7 @@ class DB:
         try:
             rakutan_data = {}
             temp_list = []
-            collection = conn['rakutan']
+            collection = conn[RAKUTAN_COLLECTION]
 
             if search_word[0] == '%':
                 query = {'lecturename': {'$regex': f'{search_word[1:]}', '$options': 'i'}}
@@ -245,7 +249,7 @@ class DB:
         types = "" -> Get onitan(difficult) omikuji.
         """
         try:
-            collection = conn['rakutan']
+            collection = conn[RAKUTAN_COLLECTION]
 
             if types == "normal":
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'accept_prev': {'$gt': 15}},
@@ -303,7 +307,7 @@ class DB:
                 collection = conn['usertable']
                 collection.update({'uid': uid}, {'$set': {'color_theme': value}})
             elif types == "url":
-                collection = conn['rakutan']
+                collection = conn[RAKUTAN_COLLECTION]
                 collection.update({'id': uid}, {'$set': {'url': value}})
             return 'success'
         except:
