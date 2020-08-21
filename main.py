@@ -190,7 +190,7 @@ class DB:
             if types == "count":
                 query = {'uid': uid}
             else:
-                query = {'$and': [{'uid': uid}, {'lectureid': lectureID}]}
+                query = {'$and': [{'uid': uid}, {'lectureid': int(lectureID)}]}
 
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
@@ -285,7 +285,7 @@ class DB:
                 res = self.get_userfav(conn, uid, lectureID)
                 if res == "already":
                     return "already"
-                query = {'uid': uid, 'lectureid': lectureID, 'lecturename': lectureName}
+                query = {'uid': uid, 'lectureid': int(lectureID), 'lecturename': lectureName}
 
             else:
                 return "invalid types"
