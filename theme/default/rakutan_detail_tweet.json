@@ -141,7 +141,7 @@
             "contents": [
               {
                 "type": "text",
-                "text": "2019年度",
+                "text": "2018年度",
                 "size": "sm",
                 "color": "#555555",
                 "flex": 0
@@ -253,6 +253,27 @@
                   "type": "uri",
                   "label": "action",
                   "uri": "https://sites.google.com/view/siketai/%E9%81%8E%E5%8E%BB%E5%95%8F"
+                }
+              }
+            ]
+          },
+          {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "filler",
+                "flex": 4
+              },
+              {
+                "type": "image",
+                "url": "https://das82.com/images/tweet.png",
+                "size": "xs",
+                "aspectRatio": "8:3",
+                "action": {
+                  "type": "uri",
+                  "label": "tweet",
+                  "uri": "https://ku-rakutan.das82.com/"
                 }
               }
             ]

@@ -41,7 +41,12 @@ mongo_db = os.environ["mongo_db"]
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
 color_theme = ""
-ENABLE_TWEET_SHARE = True
+THIS_YEAR = 2020
+ENABLE_TWEET_SHARE = False
+if ENABLE_TWEET_SHARE:
+    rakutan_json_filepath = 'rakutan_detail_tweet.json'
+else:
+    rakutan_json_filepath = 'rakutan_detail.json'
 
 
 class LoadJSON(object):
@@ -381,9 +386,9 @@ class Prepare:
         :return: json_content
         """
         if color != "":
-            f = open(f'./theme/{color}/rakutan_detail.json', 'r', encoding='utf-8')
+            f = open(f'./theme/{color}/{rakutan_json_filepath}', 'r', encoding='utf-8')
         else:
-            f = open(f'./theme/{color_theme}/rakutan_detail.json', 'r', encoding='utf-8')
+            f = open(f'./theme/{color_theme}/{rakutan_json_filepath}', 'r', encoding='utf-8')
 
         # load template
         data = json.dumps(json.load(f))
@@ -432,6 +437,7 @@ class Prepare:
                 _year = ""
             else:
                 _year = str(year)
+            body_contents[0]['contents'][year]['contents'][0]['text'] = '{}年度'.format(THIS_YEAR-year)
             body_contents[0]['contents'][year]['contents'][1]['text'] = '{}% ({}/{})'.format(
                 self.cal_percentage(array[f'accept_prev{_year}'], array[f'total_prev{_year}']),
                 self.isSet(array[f'accept_prev{_year}']), self.isSet(array[f'total_prev{_year}']))
