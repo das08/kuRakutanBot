@@ -317,7 +317,7 @@ class DB:
     def delete_db(self, conn, search_id, uid="", types="", url=""):
         try:
             if types == "fav":
-                query = {'$and': [{'uid': uid}, {'lectureid': search_id}]}
+                query = {'$and': [{'uid': uid}, {'lectureid': int(search_id)}]}
                 collection = conn['userfav']
             else:
                 query = {'$and': [{'search_id': search_id}, {'url': url}]}
