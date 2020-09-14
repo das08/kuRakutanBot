@@ -7,3 +7,4 @@ mongo.py
 key
 .DS_Store
 .idea
+module/__pycache__
