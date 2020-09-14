@@ -30,9 +30,9 @@ command = {
     "おみくじ": fn.normalOmikuji,
     "楽単": fn.normalOmikuji,
 
-    "人社おみくじ": fn.shrineOmikuji,
-    "おみくじ 人社": fn.shrineOmikuji,
-    "人社": fn.shrineOmikuji,
+    "人社おみくじ": fn.sorry,
+    "おみくじ 人社": fn.sorry,
+    "人社": fn.sorry,
 
     "鬼単おみくじ": fn.oniOmikuji,
     "おみくじ 鬼単": fn.oniOmikuji,
@@ -40,6 +40,8 @@ command = {
     "鬼": fn.oniOmikuji,
 
     "お問い合わせ": fn.inquiry,
+    "PandA": fn.cpanda,
+    "panda": fn.cpanda,
 
     "CB": fn.sorry,
     "京大楽単bot": fn.showVersion,

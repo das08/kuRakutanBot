@@ -52,6 +52,10 @@ def inquiry(token, lists):
     prepareFlexMessage(token, 'etc', 'inquiry', 'お問い合わせ')
 
 
+def cpanda(token, lists):
+    prepareFlexMessage(token, 'etc', 'cpanda', 'Comfortable PandA')
+
+
 def showVersion(token, lists):
     prepareFlexMessage(token, 'etc', 'icon', '京大楽単bot')
 
