@@ -42,6 +42,7 @@ command = {
     "お問い合わせ": fn.inquiry,
     "PandA": fn.cpanda,
     "panda": fn.cpanda,
+    "@info": fn.cpanda,
 
     "CB": fn.sorry,
     "京大楽単bot": fn.showVersion,
