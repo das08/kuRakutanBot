@@ -50,6 +50,8 @@ if ENABLE_TWEET_SHARE:
     rakutan_json_filepath = 'rakutan_detail_tweet.json'
 else:
     rakutan_json_filepath = 'rakutan_detail.json'
+
+
 # #################### #
 
 
@@ -442,7 +444,7 @@ class Prepare:
                 _year = ""
             else:
                 _year = str(year)
-            body_contents[0]['contents'][year]['contents'][0]['text'] = '{}年度'.format(THIS_YEAR-year)
+            body_contents[0]['contents'][year]['contents'][0]['text'] = '{}年度'.format(THIS_YEAR - year)
             body_contents[0]['contents'][year]['contents'][1]['text'] = '{}% ({}/{})'.format(
                 self.cal_percentage(array[f'accept_prev{_year}'], array[f'total_prev{_year}']),
                 self.isSet(array[f'accept_prev{_year}']), self.isSet(array[f'total_prev{_year}']))
@@ -594,6 +596,14 @@ class Prepare:
         url = text[8:].strip()
         # judge if is in correct url-format.
         if re.match(pattern, url):
+            return True
+        else:
+            return False
+
+    def isEmptyURL(self, text):
+        """Check if received url is in Empty-URL-format or not. Has to be 'None'"""
+        url = text[8:].strip()
+        if url == "None" or url == "none":
             return True
         else:
             return False
@@ -849,7 +859,7 @@ def handle_message(event):
         else:
             # 2.Check if kakomon URL is sent:
             if prepare.isURLID(received_message):
-                if prepare.isURL(received_message):
+                if prepare.isURL(received_message) or prepare.isEmptyURL(received_message):
                     fetch_result = db.get_by_id(conn, received_message[2:7])
                     if fetch_result[0] == 'success':
                         fetch_result = db.add_to_mergelist(conn, received_message, uid)
@@ -999,6 +1009,8 @@ def handle_message(event):
 
         # for admin only #
         elif types == 'merge':
+            if url[0] == "None" or url[0] == "none":
+                url[0] = ""
             result = db.update_db(conn, search_id, url[0], "url")
             if result == 'success':
                 db.delete_db(conn, search_id, url[0])
