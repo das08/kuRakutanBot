@@ -44,6 +44,8 @@ command = {
     "panda": fn.cpanda,
     "@info": fn.cpanda,
 
+    "@c": fn.sorry,
+
     "CB": fn.sorry,
     "京大楽単bot": fn.showVersion,
     "d@s08": fn.checkKakomon,

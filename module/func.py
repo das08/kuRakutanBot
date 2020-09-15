@@ -104,6 +104,16 @@ def checkKakomon(token, lists):
     ap.push_flex()
 
 
+def counter(token, lists):
+    send = ap.Send(token)
+    db = ap.DB()
+    result = db.counter(lists[3], lists[0], types="omikuji")
+    if result[0] == 'success':
+        send.send_text("success counter")
+    else:
+        send.send_text("failed counter")
+
+
 def getFavList(token, lists):
     send = ap.Send(token)
     db = ap.DB()
