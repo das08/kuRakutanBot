@@ -113,10 +113,6 @@ def counter(token, conn, uid, types):
     send = ap.Send(token)
     db = ap.DB()
     result = db.counter(conn, uid, types=types)
-    if result[1] == 'exception':
-        send.send_text("fail counter")
-    else:
-        send.send_text("success counter")
 
 
 def getFavList(token, lists):
