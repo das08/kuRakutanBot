@@ -316,6 +316,18 @@ class DB:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
+    def counter(self, conn, uid, types=""):
+        """Counter for specific commands."""
+        columnName = {'info': 'info', 'normalomikuji': 'normalomikuji', 'oniomikuji': 'oniomikuji', 'fav': 'fav',
+                      'icon': 'icon', 'help': 'help'}
+        try:
+            collection = conn['counter']
+            collection.find_one_and_update({'uid': uid}, {'$inc': {columnName[types]: 1}}, upsert=True)
+            return 'success'
+        except:
+            stderr("[error]counter:Cannnot update counter")
+            return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
+
     def delete_db(self, conn, search_id, uid="", types="", url=""):
         try:
             if types == "fav":
@@ -854,7 +866,7 @@ def handle_message(event):
 
         if received_message in response:
             # prepare params to pass
-            lists = [uid, received_message, color_theme]
+            lists = [uid, received_message, color_theme, conn]
 
             # 1.Check if reserved word is sent.
             response[received_message](token, lists)

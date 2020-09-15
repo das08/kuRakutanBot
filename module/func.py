@@ -34,6 +34,7 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
 
 
 def helps(token, lists):
+    counter(token, lists[3], lists[0], "help")
     color_theme = lists[2]
     prepareFlexMessage(token, color_theme, 'help', 'ヘルプ')
 
@@ -53,14 +54,17 @@ def inquiry(token, lists):
 
 
 def cpanda(token, lists):
+    counter(token, lists[3], lists[0], "info")
     prepareFlexMessage(token, 'etc', 'cpanda', 'Comfortable PandA')
 
 
 def showVersion(token, lists):
+    counter(token, lists[3], lists[0], "icon")
     prepareFlexMessage(token, 'etc', 'icon', '京大楽単bot')
 
 
 def normalOmikuji(token, lists):
+    counter(token, lists[3], lists[0], "normalomikuji")
     color_theme = lists[2]
     prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0])
 
@@ -71,6 +75,7 @@ def shrineOmikuji(token, lists):
 
 
 def oniOmikuji(token, lists):
+    counter(token, lists[3], lists[0], "oniomikuji")
     color_theme = lists[2]
     prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0])
 
@@ -104,7 +109,14 @@ def checkKakomon(token, lists):
     ap.push_flex()
 
 
+def counter(token, conn, uid, types):
+    send = ap.Send(token)
+    db = ap.DB()
+    result = db.counter(conn, uid, types=types)
+
+
 def getFavList(token, lists):
+    counter(token, lists[3], lists[0], "fav")
     send = ap.Send(token)
     db = ap.DB()
     uid = lists[0]
