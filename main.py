@@ -662,14 +662,14 @@ class Prepare:
         chunk = []
 
         for (lec_id, lec_name, lec_url) in zip(lecture_id, lecture_name, lecture_url):
-            if lec_url == "None" or lec_url == "none":
-                lec_url = "https://none.com"
             socket = json_content['body']['contents'][0]
             socket['contents'][1]['text'] = f"[#{lec_id}] {lec_name}"
             socket['contents'][2]['text'] = lec_url
             socket['contents'][2]['action']['uri'] = lec_url
             socket['contents'][3]['contents'][0]['action']['data'] = f"type=merge&id={str(lec_id)}&url={lec_url}"
             socket['contents'][3]['contents'][1]['action']['data'] = f"type=decline&id={str(lec_id)}&url={lec_url}"
+            if lec_url == "None" or lec_url == "none":
+                socket['contents'][2]['action']['uri'] = "https://none.com"
             chunk.append(copy.deepcopy(socket))
 
         json_content['body']['contents'] = chunk
