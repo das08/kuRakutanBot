@@ -318,7 +318,8 @@ class DB:
 
     def counter(self, conn, uid, types=""):
         """Counter for specific commands."""
-        columnName = {'info': 'info', 'omikuji': 'omikuji', 'fav': 'fav', 'icon': 'icon', 'help': 'help'}
+        columnName = {'info': 'info', 'normalomikuji': 'normalomikuji', 'oniomikuji': 'oniomikuji', 'fav': 'fav',
+                      'icon': 'icon', 'help': 'help'}
         try:
             collection = conn['counter']
             collection.find_one_and_update({'uid': uid}, {'$inc': {columnName[types]: 1}}, upsert=True)
