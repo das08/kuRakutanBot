@@ -229,7 +229,7 @@ class DB:
             if count > 0:
                 mes = "success"
                 for row in results:
-                    search_id = row['id']
+                    search_id = row['search_id']
                     url = row['url']
 
                     get_lecture = self.get_by_id(conn, search_id)[1]['lecturename']
@@ -662,6 +662,8 @@ class Prepare:
         chunk = []
 
         for (lec_id, lec_name, lec_url) in zip(lecture_id, lecture_name, lecture_url):
+            if lec_url == "None" or lec_url == "none":
+                lec_url = "https://none.com"
             socket = json_content['body']['contents'][0]
             socket['contents'][1]['text'] = f"[#{lec_id}] {lec_name}"
             socket['contents'][2]['text'] = lec_url
