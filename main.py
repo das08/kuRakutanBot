@@ -308,7 +308,7 @@ class DB:
                 collection.update({'uid': uid}, {'$set': {'color_theme': value}})
             elif types == "url":
                 collection = conn[RAKUTAN_COLLECTION]
-                collection.update({'id': uid}, {'$set': {'url': value}})
+                collection.update({'id': int(uid)}, {'$set': {'url': value}})
             return 'success'
         except:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
@@ -320,7 +320,8 @@ class DB:
                 query = {'$and': [{'uid': uid}, {'lectureid': int(search_id)}]}
                 collection = conn['userfav']
             else:
-                query = {'$and': [{'search_id': search_id}, {'url': url}]}
+                # query = {'$and': [{'search_id': int(search_id)}, {'url': url}]}
+                query = {'search_id': int(search_id)}
                 collection = conn['urlmerge']
 
             results = collection.remove(query)
@@ -337,7 +338,7 @@ class DB:
         url = received_message[8:].strip()
         try:
             collection = conn['urlmerge']
-            query = {'search_id': search_id, 'url': url, 'uid': uid, 'send_time': dates}
+            query = {'search_id': int(search_id), 'url': url, 'uid': uid, 'send_time': dates}
 
             results = collection.insert(query)
 
