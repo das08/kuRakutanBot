@@ -32,18 +32,19 @@
             "layout": "vertical",
             "contents": [
               {
-                "type": "box",
-                "layout": "baseline",
-                "contents": [
-                  {
-                    "type": "text",
-                    "text": "Version: 3.11",
-                    "size": "xs",
-                    "color": "#868484"
-                  }
-                ],
-                "spacing": "sm",
-                "margin": "md"
+                "type": "text",
+                "text": "2020.09.16",
+                "size": "xxs",
+                "color": "#868484",
+                "align": "center"
+              },
+              {
+                "type": "text",
+                "text": "Ver: 3.0.0",
+                "size": "xs",
+                "color": "#868484",
+                "weight": "bold",
+                "align": "center"
               }
             ]
           }

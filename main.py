@@ -28,6 +28,22 @@ from linebot.models import (
 
 app = Flask(__name__)
 
+# ##### SETTINGS ##### #
+VERSION = "3.2.0"
+UPDATE_DATE = "2020.09.16"
+color_theme = ""
+
+THIS_YEAR = 2020
+RAKUTAN_COLLECTION = "rakutan2020"
+ENABLE_TWEET_SHARE = False
+if ENABLE_TWEET_SHARE:
+    rakutan_json_filepath = 'rakutan_detail_tweet.json'
+else:
+    rakutan_json_filepath = 'rakutan_detail.json'
+
+# #################### #
+
+
 # 環境変数取得
 CHANNEL_ACCESS_TOKEN = os.environ["CHANNEL_ACCESS_TOKEN"]
 CHANNEL_SECRET = os.environ["CHANNEL_SECRET"]
@@ -40,19 +56,6 @@ mongo_db = os.environ["mongo_db"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
-
-# ##### SETTINGS ##### #
-color_theme = ""
-THIS_YEAR = 2020
-RAKUTAN_COLLECTION = "rakutan2020"
-ENABLE_TWEET_SHARE = False
-if ENABLE_TWEET_SHARE:
-    rakutan_json_filepath = 'rakutan_detail_tweet.json'
-else:
-    rakutan_json_filepath = 'rakutan_detail.json'
-
-
-# #################### #
 
 
 class LoadJSON(object):

@@ -10,6 +10,15 @@ def prepareFlexMessage(token, color_theme, json_name, alt_text):
     send.send_result(json_content, alt_text, alt_text)
 
 
+def modifyVersions(token, alt_text):
+    send = ap.Send(token)
+    f = open(f'./theme/etc/icon.json', 'r', encoding='utf-8')
+    json_content = [json.load(f)]
+    json_content[0]["body"]["contents"][0]["contents"][2]["contents"][0]["text"] = ap.UPDATE_DATE
+    json_content[0]["body"]["contents"][0]["contents"][2]["contents"][1]["text"] = f"Ver: {ap.VERSION}"
+    send.send_result(json_content, alt_text, alt_text)
+
+
 def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
     send = ap.Send(token)
     db = ap.DB()
@@ -60,7 +69,8 @@ def cpanda(token, lists):
 
 def showVersion(token, lists):
     counter(token, lists[3], lists[0], "icon")
-    prepareFlexMessage(token, 'etc', 'icon', '京大楽単bot')
+    # prepareFlexMessage(token, 'etc', 'icon', '京大楽単bot')
+    modifyVersions(token, '京大楽単bot')
 
 
 def normalOmikuji(token, lists):
