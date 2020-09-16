@@ -305,16 +305,19 @@ class DB:
     def update_db(self, conn, uid, value="", types=""):
         """Update something on database"""
         try:
+            count = 0
             if types == "count":
                 collection = conn['usertable']
-                collection.update({'uid': uid}, {'$inc': {'count': 1}})
+                result = collection.find_one_and_update({'uid': uid}, {'$inc': {'count': 1}})
+                for row in result:
+                    count = row['count']
             elif types == "theme":
                 collection = conn['usertable']
                 collection.update({'uid': uid}, {'$set': {'color_theme': value}})
             elif types == "url":
                 collection = conn[RAKUTAN_COLLECTION]
                 collection.update({'id': int(uid)}, {'$set': {'url': value}})
-            return 'success'
+            return 'success', count
         except:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
@@ -861,7 +864,9 @@ def handle_message(event):
 
         if check_user[0]:
             # add 1 to search counter
-            db.update_db(conn, uid, types='count')
+            result, count = db.update_db(conn, uid, types='count')
+            if result == 'success':
+                send.send_text(str(count))
         color_theme = check_user[1]
 
         # load reserved command dict
@@ -1029,7 +1034,7 @@ def handle_message(event):
             if url[0] == "None" or url[0] == "none":
                 url[0] = ""
             result = db.update_db(conn, search_id, url[0], "url")
-            if result == 'success':
+            if result[0] == 'success':
                 db.delete_db(conn, search_id, url[0])
                 message = f"[#{search_id}] をマージしました。"
             else:
