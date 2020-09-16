@@ -869,9 +869,9 @@ def handle_message(event):
             # add 1 to search counter
             result, count = db.update_db(conn, uid, types='count')
             if result == 'success':
-                if count > 2000:
+                if count == 20000:
                     line_bot_api.link_rich_menu_to_user(uid, gold_menu)
-                elif count > 1000:
+                elif count == 10000:
                     line_bot_api.link_rich_menu_to_user(uid, gold_menu)
         color_theme = check_user[1]
 
