@@ -48,8 +48,8 @@ command = {
     "京大楽単bot": fn.showVersion,
     "d@s08": fn.checkKakomon,
     "myuid": fn.myUID,
-    "@set:birdman": fn.setRichMenu,
-    "@set:ad": fn.setRichMenu,
+    "@set:gold": fn.setRichMenu,
+    "@set:silver": fn.setRichMenu,
     "@set:default": fn.setRichMenu,
 
     "@theme:default": fn.changeTheme,

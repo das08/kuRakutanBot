@@ -199,13 +199,15 @@ def setRichMenu(token, lists):
     menu = lists[1][5:]
     text = "リッチメニューを変更しました。"
 
-    if menu == 'birdman':
-        menu_id = "richmenu-fb2161dd36ae54baf01b17158eb22ca5"
+    if menu == 'gold':
+        menu_id = f"richmenu-{ap.gold_menu}"
         text += "\n@set:defaultで元に戻せます。"
-    elif menu == 'ad':
-        menu_id = "richmenu-fb2161dd36ae54baf01b17158eb22ca5"
+    elif menu == 'silver':
+        menu_id = f"richmenu-{ap.silver_menu}"
         text += "\n@set:defaultで元に戻せます。"
+    elif menu == 'default':
+        menu_id = f"richmenu-{ap.normal_menu}"
     else:
-        menu_id = "richmenu-66a5b2117176dfd7d98055e2b6c85aed"
+        menu_id = f"richmenu-{ap.normal_menu}"
     ap.line_bot_api.link_rich_menu_to_user(uid, menu_id)
     send.send_text(text)
