@@ -15,6 +15,7 @@ import copy
 import unicodedata
 import urllib
 import urllib.parse
+import urllib.request
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -53,6 +54,11 @@ mongo_port = os.environ["mongo_port"]
 mongo_user = os.environ["mongo_user"]
 mongo_pass = os.environ["mongo_pass"]
 mongo_db = os.environ["mongo_db"]
+
+normal_menu = os.environ["normal_menu"]
+silver_menu = os.environ["silver_menu"]
+gold_menu = os.environ["gold_menu"]
+richmenuList = {"normal": normal_menu, "silver": silver_menu, "gold": gold_menu}
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
@@ -309,8 +315,7 @@ class DB:
             if types == "count":
                 collection = conn['usertable']
                 result = collection.find_one_and_update({'uid': uid}, {'$inc': {'count': 1}})
-                for row in result:
-                    count = row['count']
+                count = int(result['count'])
             elif types == "theme":
                 collection = conn['usertable']
                 collection.update({'uid': uid}, {'$set': {'color_theme': value}})
@@ -793,6 +798,21 @@ class Send:
             TextSendMessage(text=message),
         )
 
+    def richmenuRequest(self, uid, types):
+        reqURL = f"https://api.line.me/v2/bot/user/{uid}/richmenu/richmenu-{richmenuList[types]}"
+        reqType = {'Content-Type': 'application/json'}
+        reqHeader = json.dumps({
+            'Authorization': f'Bearer {CHANNEL_ACCESS_TOKEN}'
+        })
+        req = urllib.request.Request(reqURL, data=reqHeader.encode(), method='POST', headers=reqType)
+
+        try:
+            with urllib.request.urlopen(req) as response:
+                status = response.getcode()
+
+        except:
+            print("failed to change richmenu")
+
 
 def stderr(err_message):
     print(err_message)
@@ -866,7 +886,10 @@ def handle_message(event):
             # add 1 to search counter
             result, count = db.update_db(conn, uid, types='count')
             if result == 'success':
-                send.send_text(str(count))
+                if count > 2000:
+                    send.richmenuRequest(uid, "gold")
+                elif count > 1000:
+                    send.richmenuRequest(uid, "silver")
         color_theme = check_user[1]
 
         # load reserved command dict
