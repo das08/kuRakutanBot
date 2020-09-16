@@ -1,7 +1,6 @@
 test.py
 app.py
 .env
-setting.py
 __pycache__
 mongo.py
 key
