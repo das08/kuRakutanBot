@@ -64,7 +64,7 @@ def inquiry(token, lists):
 
 def cpanda(token, lists):
     counter(token, lists[3], lists[0], "info")
-    prepareFlexMessage(token, 'etc', 'cpanda', 'Comfortable PandA')
+    prepareFlexMessage(token, 'etc', 'cpanda', 'お知らせ')
 
 
 def showVersion(token, lists):
