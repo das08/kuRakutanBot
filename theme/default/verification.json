@@ -1,0 +1,149 @@
+{
+  "type": "bubble",
+  "header": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "認証状況",
+        "weight": "bold",
+        "size": "lg",
+        "margin": "md",
+        "color": "#E6E7E2",
+        "wrap": true
+      },
+      {
+        "type": "separator"
+      },
+      {
+        "type": "spacer",
+        "size": "lg"
+      }
+    ],
+    "paddingAll": "20px",
+    "spacing": "md",
+    "paddingTop": "22px",
+    "paddingBottom": "0px"
+  },
+  "body": {
+    "type": "box",
+    "layout": "vertical",
+    "contents": [
+      {
+        "type": "text",
+        "text": "未認証"
+      },
+      {
+        "type": "box",
+        "layout": "vertical",
+        "spacing": "sm",
+        "contents": [
+          {
+            "type": "separator",
+            "color": "#000000"
+          },
+          {
+            "type": "text",
+            "text": "認証について",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true,
+            "weight": "bold",
+            "size": "lg",
+            "margin": "lg",
+            "decoration": "underline"
+          },
+          {
+            "type": "text",
+            "text": "・過去問の閲覧には京都大学の学生メールアドレスによる認証が必要です。",
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "・本botでは認証リンクの送信にのみ学生アドレスを使用し、サーバー上に保存することはありません。",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "・認証状況はは毎年4月にリセットされる予定です。",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true
+          },
+          {
+            "type": "text",
+            "text": "・過去問閲覧以外の機能は未認証でもご利用いただけます。",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "認証方法",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true,
+            "weight": "bold",
+            "size": "lg",
+            "margin": "lg",
+            "decoration": "underline"
+          },
+          {
+            "type": "text",
+            "text": "・お持ちの学生アドレス(@st.kyoto-u.ac.jp)をトーク画面にお送りください。",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true,
+            "weight": "bold"
+          },
+          {
+            "type": "text",
+            "text": "・rakutan@gmail.comより送信された認証リンクをクリックすることで認証が完了します。",
+            "action": {
+              "type": "uri",
+              "label": "action",
+              "uri": "https://developers.line.biz/console/fx-beta/"
+            },
+            "wrap": true
+          }
+        ],
+        "margin": "xxl"
+      }
+    ]
+  },
+  "styles": {
+    "header": {
+      "backgroundColor": "#3C3C3A"
+    },
+    "body": {
+      "backgroundColor": "#F4F3F9"
+    },
+    "footer": {
+      "separator": true,
+      "backgroundColor": "#E7E8E3",
+      "separatorColor": "#D6D6D4"
+    }
+  }
+}
