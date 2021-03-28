@@ -19,6 +19,7 @@ import requests
 import socket
 import requests.packages.urllib3.util.connection as urllib3_cn
 import mojimoji
+import uuid
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -304,6 +305,10 @@ class DB:
                     return "already"
                 query = {'uid': uid, 'lectureid': int(lectureID), 'lecturename': lectureName}
 
+            elif types == "ver":
+                collection = conn['verification']
+                query = {'uid': uid, 'code': lectureID}
+
             else:
                 return "invalid types"
 
@@ -350,6 +355,9 @@ class DB:
             if types == "fav":
                 query = {'$and': [{'uid': uid}, {'lectureid': int(search_id)}]}
                 collection = conn['userfav']
+            elif types == "ver":
+                query = {'uid': uid}
+                collection = conn['verification']
             else:
                 # query = {'$and': [{'search_id': int(search_id)}, {'url': url}]}
                 query = {'search_id': int(search_id)}
@@ -385,19 +393,22 @@ class DB:
             query = {'uid': uid}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
+            verified = False
 
             if count > 0:
                 for row in results:
                     color_theme = row['color_theme']
+                    if 'verified' in row and row['verified'] == 1:
+                        verified = True
             else:
                 self.add_to_db(conn, uid, "uid")
                 color_theme = "default"
 
-            return True, color_theme
+            return True, color_theme, verified
         except:
             stderr(f"[error]isinDB:Cannnot isin {uid}")
             color_theme = "default"
-            return False, color_theme
+            return False, color_theme, verified
 
 
 class KUWiki:
@@ -686,6 +697,9 @@ class Prepare:
         else:
             return value
 
+    def isStudentAddress(self, value):
+        return re.match('[A-Za-z0-9\._+]+@st\.kyoto-u\.ac\.jp', value) is not None
+
     def list_to_str(self, array):
         """
         Removes list bracket in value.
@@ -925,6 +939,7 @@ def handle_message(event):
                 elif count == 10000:
                     line_bot_api.link_rich_menu_to_user(uid, gold_menu)
         color_theme = check_user[1]
+        verified = check_user[2]
 
         # load reserved command dict
         response = module.response.command
@@ -937,7 +952,16 @@ def handle_message(event):
             response[received_message](token, lists)
         else:
             # 2.Check if kakomon URL is sent:
-            if prepare.isURLID(received_message):
+            if prepare.isStudentAddress(received_message):
+                if verified:
+                    send.send_text("すでに認証済みです。")
+                else:
+                    verificationCode = uuid.uuid4()
+                    db.delete_db(conn, 0, uid=uid, types="ver")
+                    db.add_to_db(conn, uid, "ver", '{}'.format(verificationCode))
+
+            # 2.Check if kakomon URL is sent:
+            elif prepare.isURLID(received_message):
                 if prepare.isURL(received_message) or prepare.isEmptyURL(received_message):
                     fetch_result = db.get_by_id(conn, received_message[2:7])
                     if fetch_result[0] == 'success':
