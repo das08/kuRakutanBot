@@ -19,7 +19,7 @@ def modifyVersions(token, alt_text):
     send.send_result(json_content, alt_text, alt_text)
 
 
-def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
+def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
     send = ap.Send(token)
     db = ap.DB()
     prepare = ap.Prepare()
@@ -34,7 +34,7 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
                 array = getRakutanInfo[1]
                 fetch_fav = db.get_userfav(conn, uid, array['id'])
 
-                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type)
+                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type, verified=verified)
                 send.send_result(json_content, alt_text, 'omikuji')
             else:
                 send.send_text(getRakutanInfo[0])
@@ -84,18 +84,18 @@ def showVersion(token, lists):
 def normalOmikuji(token, lists):
     counter(token, lists[3], lists[0], "normalomikuji")
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0], lists[4])
 
 
 def shrineOmikuji(token, lists):
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'shrine', '人社おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'shrine', '人社おみくじ結果', lists[0], lists[4])
 
 
 def oniOmikuji(token, lists):
     counter(token, lists[3], lists[0], "oniomikuji")
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0], lists[4])
 
 
 def changeTheme(token, lists):

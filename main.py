@@ -479,10 +479,11 @@ class Prepare:
         self.json_content = {}
         self.json_contents = []
 
-    def rakutan_detail(self, array, fav="notyet", color="", omikuji=""):
+    def rakutan_detail(self, array, fav="notyet", color="", omikuji="", verified=False):
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
+        :param verified:
         :param fav:
         :param omikuji:
         :param array: lecture data from db
@@ -1023,8 +1024,8 @@ def handle_message(event):
                     array = fetch_result[1]
                     kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
                     array["url"] = kakomonURL
-                    print(kakomonURL)
-                    json_content = prepare.rakutan_detail(array, fetch_fav)
+
+                    json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                     send.send_result(json_content, received_message, 'rakutan_detail')
                 else:
                     send.send_text(fetch_result[0])
@@ -1043,9 +1044,8 @@ def handle_message(event):
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
                         kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
                         array["url"] = kakomonURL
-                        print(kakomonURL)
 
-                        json_content = prepare.rakutan_detail(array, fetch_fav)
+                        json_content = prepare.rakutan_detail(array, fetch_fav,verified=verified)
                         send.send_result(json_content, received_message, 'rakutan_detail')
                     # if query result is over 100:
                     elif record_count > 100:
@@ -1116,7 +1116,7 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array, fetch_fav, "default")
+                    json_content = prepare.rakutan_detail(array, fetch_fav, "default",verified=verified)
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
                     json_text = [json.load(f)]
                     json_text[0]['body']['contents'][0]['text'] = text
