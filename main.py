@@ -417,7 +417,7 @@ class DB:
         status = False
         try:
             collection = conn['verification']
-            query = {'code': verificationCode}
+            query = {'code': '{}'.format(verificationCode)}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
             uid = ""
