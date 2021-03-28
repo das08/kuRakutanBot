@@ -18,6 +18,7 @@ import urllib.parse
 import requests
 import socket
 import requests.packages.urllib3.util.connection as urllib3_cn
+import mojimoji
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -416,7 +417,6 @@ class KUWiki:
         param = {"name": lectureName}
         res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param)
         res_json = res.json()
-        print(res_json)
         lectureCount = res_json['count']
 
         kakomonURL = []
@@ -901,6 +901,7 @@ def handle_message(event):
 
     send = Send(token)
     db = DB()
+    kuWiki = KUWiki()
     prepare = Prepare(received_message, token)
 
     with db.connect() as client:
@@ -949,6 +950,9 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
+                    kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                    array["url"] = kakomonURL
+                    print(kakomonURL)
                     json_content = prepare.rakutan_detail(array, fetch_fav)
                     send.send_result(json_content, received_message, 'rakutan_detail')
                 else:
@@ -966,6 +970,9 @@ def handle_message(event):
 
                         array = prepare.list_to_str(array)
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
+                        kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                        array["url"] = kakomonURL
+                        print(kakomonURL)
 
                         json_content = prepare.rakutan_detail(array, fetch_fav)
                         send.send_result(json_content, received_message, 'rakutan_detail')
