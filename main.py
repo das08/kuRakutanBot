@@ -1,7 +1,7 @@
 import random
 
 import module
-import setting # TODO: デプロイ時コメントアウト
+import setting  # TODO: デプロイ時コメントアウト
 
 from flask import Flask, request, abort
 from pymongo import MongoClient
@@ -433,7 +433,6 @@ class KUWiki:
         return kakomonURL
 
 
-
 class Prepare:
     """
     Prepares json file for sending flex message.
@@ -530,13 +529,22 @@ class Prepare:
         kakomon_symbol = body_contents[0]['contents'][6]['contents'][1]
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
 
-        if array['url'] != "":
+        if array['url']:
             kakomon_symbol['text'] = '〇'
             kakomon_symbol['color'] = '#0fd142'
+
             kakomon_link['text'] = 'リンク'
             kakomon_link['color'] = '#4c7cf5'
             kakomon_link['decoration'] = 'underline'
-            kakomon_link['action']['uri'] = array['url']
+            kakomon_link['action']['uri'] = array['url'][0]
+            if len(array['url']) > 1:
+                kakomon_link2 = kakomon_link.copy()
+                kakomon_link2['text'] = 'リンク2'
+                kakomon_link2['color'] = '#4c7cf5'
+                kakomon_link2['decoration'] = 'underline'
+                kakomon_link2['action']['uri'] = array['url'][1]
+                body_contents[0]['contents'][6]['contents'].append(kakomon_link2)
+
         else:
             url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
             url_provide_template['data'] += str(array['id'])
