@@ -62,6 +62,10 @@ def inquiry(token, lists):
     prepareFlexMessage(token, 'etc', 'inquiry', 'お問い合わせ')
 
 
+def verification(token, lists):
+    prepareFlexMessage(token, 'etc', 'verification', 'ユーザ認証')
+
+
 def cpanda(token, lists):
     counter(token, lists[3], lists[0], "info")
     prepareFlexMessage(token, 'etc', 'cpanda', 'お知らせ')
