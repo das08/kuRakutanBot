@@ -1,7 +1,7 @@
 import random
 
 import module
-# import setting
+import setting # TODO: デプロイ時コメントアウト
 
 from flask import Flask, request, abort
 from pymongo import MongoClient
@@ -15,6 +15,9 @@ import copy
 import unicodedata
 import urllib
 import urllib.parse
+import requests
+import socket
+import requests.packages.urllib3.util.connection as urllib3_cn
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -35,7 +38,8 @@ color_theme = ""
 
 THIS_YEAR = 2020
 RAKUTAN_COLLECTION = "rakutan2020"
-ENABLE_TWEET_SHARE = False
+ENABLE_TWEET_SHARE = True
+
 if ENABLE_TWEET_SHARE:
     rakutan_json_filepath = 'rakutan_detail_tweet.json'
 else:
@@ -57,6 +61,9 @@ mongo_db = os.environ["mongo_db"]
 normal_menu = os.environ["normal_menu"]
 silver_menu = os.environ["silver_menu"]
 gold_menu = os.environ["gold_menu"]
+
+kuwiki_api_endpoint = os.environ["kuwiki_api"]
+kuwiki_api_token = os.environ["kuwiki_token"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
@@ -390,6 +397,41 @@ class DB:
             stderr(f"[error]isinDB:Cannnot isin {uid}")
             color_theme = "default"
             return False, color_theme
+
+
+class KUWiki:
+    def __init__(self):
+        # Use ipv4 for kuwiki api
+        urllib3_cn.allowed_gai_family = self.allowed_gai_family
+
+    def allowed_gai_family(self):
+        """
+         https://github.com/shazow/urllib3/blob/master/urllib3/util/connection.py
+        """
+        family = socket.AF_INET
+        return family
+
+    def getKakomonURL(self, lectureName):
+        header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
+        param = {"name": lectureName}
+        res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param)
+        res_json = res.json()
+        print(res_json)
+        lectureCount = res_json['count']
+
+        kakomonURL = []
+
+        # iterate all possible lecture
+        for i in range(lectureCount):
+            # complete match
+            if res_json['results'][i]['name'] == lectureName:
+                examCount = res_json['results'][i]['exam_count']
+                # append kakomon URL to list
+                for j in range(examCount):
+                    kakomonURL.append(res_json['results'][i]['exam_set'][0]['drive_link'])
+
+        return kakomonURL
+
 
 
 class Prepare:
