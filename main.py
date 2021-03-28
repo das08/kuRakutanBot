@@ -566,6 +566,7 @@ class Prepare:
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
 
         if array['url']:
+            print(array['url'])
             kakomon_symbol['text'] = '〇'
             kakomon_symbol['color'] = '#0fd142'
 
@@ -586,6 +587,13 @@ class Prepare:
             url_provide_template['data'] += str(array['id'])
             kakomon_link['action'] = url_provide_template
             kakomon_link['text'] = '追加する'
+
+        if not verified:
+            url_provide_template = {"type": "message", "label": "action", "text": "ユーザ認証"}
+            kakomon_symbol['text'] = '×'
+            kakomon_symbol['color'] = '#ef1d2f'
+            kakomon_link['action'] = url_provide_template
+            kakomon_link['text'] = '未認証'
 
         if ENABLE_TWEET_SHARE:
             # make KKK shorter
@@ -1022,7 +1030,8 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                    kakomonURL = []
+                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
                     array["url"] = kakomonURL
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
@@ -1042,7 +1051,8 @@ def handle_message(event):
 
                         array = prepare.list_to_str(array)
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
-                        kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                        kakomonURL = []
+                        if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
                         array["url"] = kakomonURL
 
                         json_content = prepare.rakutan_detail(array, fetch_fav,verified=verified)

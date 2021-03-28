@@ -1,6 +1,7 @@
 import main as ap
 import json
 import math
+import mojimoji
 
 
 def prepareFlexMessage(token, color_theme, json_name, alt_text):
@@ -23,6 +24,7 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
     send = ap.Send(token)
     db = ap.DB()
     prepare = ap.Prepare()
+    kuWiki = ap.KUWiki()
 
     with db.connect() as client:
         conn = client[ap.mongo_db]
@@ -33,6 +35,9 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
             if getRakutanInfo[0] == 'success':
                 array = getRakutanInfo[1]
                 fetch_fav = db.get_userfav(conn, uid, array['id'])
+                kakomonURL = []
+                if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                array["url"] = kakomonURL
 
                 json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type, verified=verified)
                 send.send_result(json_content, alt_text, 'omikuji')
