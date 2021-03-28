@@ -333,6 +333,9 @@ class DB:
             elif types == "url":
                 collection = conn[RAKUTAN_COLLECTION]
                 collection.update({'id': int(uid)}, {'$set': {'url': value}})
+            elif types == "ver":
+                collection = conn['usertable']
+                collection.update({'uid': uid}, {'$set': {'verified': int(value)}})
             return 'success', count
         except:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
@@ -388,12 +391,12 @@ class DB:
 
     def isinDB(self, conn, uid):
         """Check if user is registered in database"""
+        verified = False
         try:
             collection = conn['usertable']
             query = {'uid': uid}
             results = collection.find(filter=query)
             count = collection.count_documents(filter=query)
-            verified = False
 
             if count > 0:
                 for row in results:
@@ -409,6 +412,27 @@ class DB:
             stderr(f"[error]isinDB:Cannnot isin {uid}")
             color_theme = "default"
             return False, color_theme, verified
+
+    def verification(self, conn, verificationCode):
+        status = False
+        try:
+            collection = conn['verification']
+            query = {'code': verificationCode}
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
+            uid = ""
+
+            if count > 0:
+                for row in results:
+                    uid = row['uid']
+                    self.update_db(conn, uid, 1, "ver")
+                    self.delete_db(conn, 0, uid=uid, types="ver")
+                    status = True
+
+            return status
+        except:
+            stderr(f"[error]isinDB:Cannnot verify")
+            return False
 
 
 class KUWiki:
@@ -895,6 +919,20 @@ def push_flex():
     return "end"
 
 
+@app.route("/verification", methods=['GET'])
+def verify_user():
+    verificationCode = request.args.get('code', '')
+    db = DB()
+    mes = "認証に失敗しました。"
+    with db.connect() as client:
+        conn = client[mongo_db]
+        status = db.verification(conn, verificationCode)
+    if status:
+        mes = "認証に成功しました"
+
+    return mes
+
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -951,7 +989,7 @@ def handle_message(event):
             # 1.Check if reserved word is sent.
             response[received_message](token, lists)
         else:
-            # 2.Check if kakomon URL is sent:
+            # 2.Check if student address is sent:
             if prepare.isStudentAddress(received_message):
                 if verified:
                     send.send_text("すでに認証済みです。")
@@ -959,6 +997,7 @@ def handle_message(event):
                     verificationCode = uuid.uuid4()
                     db.delete_db(conn, 0, uid=uid, types="ver")
                     db.add_to_db(conn, uid, "ver", '{}'.format(verificationCode))
+                    send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。")
 
             # 2.Check if kakomon URL is sent:
             elif prepare.isURLID(received_message):
