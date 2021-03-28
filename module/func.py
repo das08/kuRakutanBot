@@ -63,7 +63,11 @@ def inquiry(token, lists):
 
 
 def verification(token, lists):
-    prepareFlexMessage(token, 'etc', 'verification', 'ユーザ認証')
+    verified = lists[4]
+    if verified:
+        prepareFlexMessage(token, 'etc', 'verified', 'ユーザ認証')
+    else:
+        prepareFlexMessage(token, 'etc', 'verification', 'ユーザ認証')
 
 
 def cpanda(token, lists):

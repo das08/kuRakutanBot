@@ -984,7 +984,7 @@ def handle_message(event):
 
         if received_message in response:
             # prepare params to pass
-            lists = [uid, received_message, color_theme, conn]
+            lists = [uid, received_message, color_theme, conn, verified]
 
             # 1.Check if reserved word is sent.
             response[received_message](token, lists)
