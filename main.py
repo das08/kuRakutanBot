@@ -22,6 +22,8 @@ from requests.exceptions import Timeout
 import mojimoji
 import uuid
 
+from module.gmail import Gmail
+
 from linebot import (
     LineBotApi, WebhookHandler
 )
@@ -739,6 +741,9 @@ class Prepare:
     def isStudentAddress(self, value):
         return re.match('[A-Za-z0-9\._+]+@st\.kyoto-u\.ac\.jp', value) is not None
 
+    def isOtherAddress(self, value):
+        return re.match('[A-Za-z0-9\._+]+@[A-Za-z]+\.[A-Za-z]', value) is not None
+
     def list_to_str(self, array):
         """
         Removes list bracket in value.
@@ -1012,7 +1017,16 @@ def handle_message(event):
                     verificationCode = uuid.uuid4()
                     db.delete_db(conn, 0, uid=uid, types="ver")
                     db.add_to_db(conn, uid, "ver", '{}'.format(verificationCode))
-                    send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。")
+                    gmail = Gmail(received_message, '{}'.format(verificationCode))
+                    res = gmail.sendVerificationCode()
+                    if res:
+                        send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。")
+                    else:
+                        send.send_text("認証リンクを送信に失敗しました。")
+
+            # 2.Check if other address is sent:
+            elif prepare.isOtherAddress(received_message):
+                send.send_text("認証は学生アドレスのみ有効です。")
 
             # 2.Check if kakomon URL is sent:
             elif prepare.isURLID(received_message):
@@ -1061,7 +1075,7 @@ def handle_message(event):
                         if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
                         array["url"] = kakomonURL
 
-                        json_content = prepare.rakutan_detail(array, fetch_fav,verified=verified)
+                        json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                         send.send_result(json_content, received_message, 'rakutan_detail')
                     # if query result is over 100:
                     elif record_count > 100:
@@ -1132,7 +1146,7 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array, fetch_fav, "default",verified=verified)
+                    json_content = prepare.rakutan_detail(array, fetch_fav, "default", verified=verified)
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
                     json_text = [json.load(f)]
                     json_text[0]['body']['contents'][0]['text'] = text
