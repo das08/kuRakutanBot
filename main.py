@@ -18,6 +18,7 @@ import urllib.parse
 import requests
 import socket
 import requests.packages.urllib3.util.connection as urllib3_cn
+from requests.exceptions import Timeout
 import mojimoji
 import uuid
 
@@ -448,22 +449,27 @@ class KUWiki:
         return family
 
     def getKakomonURL(self, lectureName):
-        header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
-        param = {"name": lectureName}
-        res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param)
-        res_json = res.json()
-        lectureCount = res_json['count']
-
         kakomonURL = []
+        try:
+            header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
+            param = {"name": lectureName}
+            res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param, timeout=1.5)
+            res_json = res.json()
+            # print(res_json)
+            lectureCount = res_json['count']
 
-        # iterate all possible lecture
-        for i in range(lectureCount):
-            # complete match
-            if res_json['results'][i]['name'] == lectureName:
-                examCount = res_json['results'][i]['exam_count']
-                # append kakomon URL to list
-                for j in range(examCount):
-                    kakomonURL.append(res_json['results'][i]['exam_set'][0]['drive_link'])
+            # iterate all possible lecture
+            for i in range(lectureCount):
+                # complete match
+                if res_json['results'][i]['name'] == lectureName:
+                    examCount = res_json['results'][i]['exam_count']
+                    # append kakomon URL to list
+                    for j in range(examCount):
+                        kakomonURL.append(res_json['results'][i]['exam_set'][0]['drive_link'])
+        except json.JSONDecodeError:
+            pass
+        except Timeout:
+            pass
 
         return kakomonURL
 
