@@ -466,12 +466,13 @@ class KUWiki:
                 # complete match
                 if res_json['results'][i]['name'] == lectureName:
                     examCount = res_json['results'][i]['exam_count']
+                    if res_json['results'][i]['field'][:2] != "全学": isZengaku = False
+
                     # append kakomon URL to list
                     for j in range(examCount):
-                        if res_json['results'][i]['field'][:2] == "全学": kakomonURL.append(
-                            res_json['results'][i]['exam_set'][0]['drive_link'])
-                        else:isZengaku = False
+                        if isZengaku: kakomonURL.append(res_json['results'][i]['exam_set'][j]['drive_link'])
 
+            print("zengaku", isZengaku)
             if not isZengaku and oldKakomon:
                 kakomonURL.append(oldKakomon)
 
@@ -598,14 +599,16 @@ class Prepare:
 
         else:
             url_provide_template = {"type": "uri", "label": "action", "uri": "https://www.kuwiki.net/volunteer"}
+            kakomon_symbol['text'] = '×'
+            kakomon_symbol['color'] = '#ef1d2f'
             kakomon_link['action'] = url_provide_template
             kakomon_link['text'] = '追加する'
 
         if not verified:
             url_provide_template = {"type": "message", "label": "action", "text": "ユーザ認証"}
             kakomon_symbol['flex'] = 0
-            kakomon_symbol['text'] = '×'
-            kakomon_symbol['color'] = '#ef1d2f'
+            kakomon_symbol['text'] = '△'
+            kakomon_symbol['color'] = '#ffb101'
             kakomon_link['action'] = url_provide_template
             kakomon_link['flex'] = 7
             kakomon_link['text'] = 'ユーザー認証が必要です'
