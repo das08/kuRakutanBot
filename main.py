@@ -591,8 +591,7 @@ class Prepare:
                 body_contents[0]['contents'][6]['contents'].append(kakomon_link2)
 
         else:
-            url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
-            url_provide_template['data'] += str(array['id'])
+            url_provide_template = {"type": "uri", "label": "action", "uri": "https://www.kuwiki.net/volunteer"}
             kakomon_link['action'] = url_provide_template
             kakomon_link['text'] = '追加する'
 
@@ -1026,7 +1025,11 @@ def handle_message(event):
 
             # 2.Check if other address is sent:
             elif prepare.isOtherAddress(received_message):
-                send.send_text("認証は学生アドレスのみ有効です。")
+                if verified:
+                    send.send_text("すでに認証済みです。")
+                else:
+                    send.send_text("認証は学生アドレスのみ有効です。")
+
 
             # 2.Check if kakomon URL is sent:
             elif prepare.isURLID(received_message):

@@ -31,8 +31,22 @@
     "layout": "vertical",
     "contents": [
       {
-        "type": "text",
-        "text": "未認証"
+        "type": "box",
+        "layout": "horizontal",
+        "contents": [
+          {
+            "type": "text",
+            "text": "×",
+            "flex": 1,
+            "weight": "bold",
+            "color": "#ef1d2f"
+          },
+          {
+            "type": "text",
+            "text": "未認証",
+            "flex": 10
+          }
+        ]
       },
       {
         "type": "box",
@@ -74,17 +88,7 @@
           },
           {
             "type": "text",
-            "text": "・認証状況はは毎年4月にリセットされる予定です。",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
-            "wrap": true
-          },
-          {
-            "type": "text",
-            "text": "・過去問閲覧以外の機能は未認証でもご利用いただけます。",
+            "text": "・過去問閲覧以外の機能は未認証でもそのままご利用いただけます。",
             "action": {
               "type": "uri",
               "label": "action",
@@ -120,7 +124,7 @@
           },
           {
             "type": "text",
-            "text": "・rakutan@gmail.comより送信された認証リンクをクリックすることで認証が完了します。",
+            "text": "・rakutanbot@gmail.comより送信された認証リンクをクリックすることで認証が完了します。",
             "action": {
               "type": "uri",
               "label": "action",
