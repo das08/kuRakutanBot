@@ -603,10 +603,12 @@ class Prepare:
 
         if not verified:
             url_provide_template = {"type": "message", "label": "action", "text": "ユーザ認証"}
+            kakomon_symbol['flex'] = 0
             kakomon_symbol['text'] = '×'
             kakomon_symbol['color'] = '#ef1d2f'
             kakomon_link['action'] = url_provide_template
-            kakomon_link['text'] = '未認証'
+            kakomon_link['flex'] = 7
+            kakomon_link['text'] = 'ユーザー認証が必要です'
 
         if ENABLE_TWEET_SHARE:
             # make KKK shorter
