@@ -450,7 +450,7 @@ class KUWiki:
         family = socket.AF_INET
         return family
 
-    def getKakomonURL(self, lectureName):
+    def getKakomonURL(self, lectureName, oldKakomon):
         kakomonURL = []
         try:
             header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
@@ -459,6 +459,7 @@ class KUWiki:
             res_json = res.json()
             # print(res_json)
             lectureCount = res_json['count']
+            isZengaku = True
 
             # iterate all possible lecture
             for i in range(lectureCount):
@@ -469,6 +470,11 @@ class KUWiki:
                     for j in range(examCount):
                         if res_json['results'][i]['field'][:2] == "全学": kakomonURL.append(
                             res_json['results'][i]['exam_set'][0]['drive_link'])
+                        else:isZengaku = False
+
+            if not isZengaku and oldKakomon:
+                kakomonURL.append(oldKakomon)
+
         except json.JSONDecodeError:
             pass
         except Timeout:
@@ -1055,11 +1061,9 @@ def handle_message(event):
                     array = fetch_result[1]
                     kakomonURL = []
                     print(array["url"])
-                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
-                    if kakomonURL:
-                        array["url"] = kakomonURL
-                    elif array["url"]:
-                        array["url"] = [array["url"]]
+                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+
+                    array["url"] = kakomonURL
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                     send.send_result(json_content, received_message, 'rakutan_detail')
@@ -1079,7 +1083,7 @@ def handle_message(event):
                         array = prepare.list_to_str(array)
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
                         kakomonURL = []
-                        if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                        if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
                         array["url"] = kakomonURL
 
                         json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
@@ -1157,7 +1161,7 @@ def handle_message(event):
                     # get lectureinfo list
                     array = fetch_result[1]
                     kakomonURL = []
-                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
                     array["url"] = kakomonURL
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, "default", verified=verified)
