@@ -1,6 +1,7 @@
 import main as ap
 import json
 import math
+import mojimoji
 
 
 def prepareFlexMessage(token, color_theme, json_name, alt_text):
@@ -19,10 +20,11 @@ def modifyVersions(token, alt_text):
     send.send_result(json_content, alt_text, alt_text)
 
 
-def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
+def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
     send = ap.Send(token)
     db = ap.DB()
     prepare = ap.Prepare()
+    kuWiki = ap.KUWiki()
 
     with db.connect() as client:
         conn = client[ap.mongo_db]
@@ -33,8 +35,11 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid):
             if getRakutanInfo[0] == 'success':
                 array = getRakutanInfo[1]
                 fetch_fav = db.get_userfav(conn, uid, array['id'])
+                kakomonURL = []
+                if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                array["url"] = kakomonURL
 
-                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type)
+                json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type, verified=verified)
                 send.send_result(json_content, alt_text, 'omikuji')
             else:
                 send.send_text(getRakutanInfo[0])
@@ -62,6 +67,14 @@ def inquiry(token, lists):
     prepareFlexMessage(token, 'etc', 'inquiry', 'お問い合わせ')
 
 
+def verification(token, lists):
+    verified = lists[4]
+    if verified:
+        prepareFlexMessage(token, 'etc', 'verified', 'ユーザ認証')
+    else:
+        prepareFlexMessage(token, 'etc', 'verification', 'ユーザ認証')
+
+
 def cpanda(token, lists):
     counter(token, lists[3], lists[0], "info")
     prepareFlexMessage(token, 'etc', 'cpanda', 'お知らせ')
@@ -76,18 +89,18 @@ def showVersion(token, lists):
 def normalOmikuji(token, lists):
     counter(token, lists[3], lists[0], "normalomikuji")
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'normal', '楽単おみくじ結果', lists[0], lists[4])
 
 
 def shrineOmikuji(token, lists):
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'shrine', '人社おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'shrine', '人社おみくじ結果', lists[0], lists[4])
 
 
 def oniOmikuji(token, lists):
     counter(token, lists[3], lists[0], "oniomikuji")
     color_theme = lists[2]
-    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0])
+    prepareOmikuji(token, color_theme, 'oni', '鬼単おみくじ結果', lists[0], lists[4])
 
 
 def changeTheme(token, lists):

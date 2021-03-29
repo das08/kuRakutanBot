@@ -40,6 +40,8 @@ command = {
     "鬼": fn.oniOmikuji,
 
     "お問い合わせ": fn.inquiry,
+    "ユーザ認証": fn.verification,
+    "ユーザー認証": fn.verification,
     "PandA": fn.cpanda,
     "panda": fn.cpanda,
     "@info": fn.cpanda,

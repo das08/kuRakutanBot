@@ -1,7 +1,7 @@
 import random
 
 import module
-# import setting
+import setting  # TODO: デプロイ時コメントアウト
 
 from flask import Flask, request, abort
 from pymongo import MongoClient
@@ -15,6 +15,14 @@ import copy
 import unicodedata
 import urllib
 import urllib.parse
+import requests
+import socket
+import requests.packages.urllib3.util.connection as urllib3_cn
+from requests.exceptions import Timeout
+import mojimoji
+import uuid
+
+from module.gmail import Gmail
 
 from linebot import (
     LineBotApi, WebhookHandler
@@ -35,7 +43,8 @@ color_theme = ""
 
 THIS_YEAR = 2020
 RAKUTAN_COLLECTION = "rakutan2020"
-ENABLE_TWEET_SHARE = False
+ENABLE_TWEET_SHARE = True
+
 if ENABLE_TWEET_SHARE:
     rakutan_json_filepath = 'rakutan_detail_tweet.json'
 else:
@@ -57,6 +66,9 @@ mongo_db = os.environ["mongo_db"]
 normal_menu = os.environ["normal_menu"]
 silver_menu = os.environ["silver_menu"]
 gold_menu = os.environ["gold_menu"]
+
+kuwiki_api_endpoint = os.environ["kuwiki_api"]
+kuwiki_api_token = os.environ["kuwiki_token"]
 
 line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(CHANNEL_SECRET)
@@ -296,6 +308,10 @@ class DB:
                     return "already"
                 query = {'uid': uid, 'lectureid': int(lectureID), 'lecturename': lectureName}
 
+            elif types == "ver":
+                collection = conn['verification']
+                query = {'uid': uid, 'code': lectureID}
+
             else:
                 return "invalid types"
 
@@ -320,6 +336,9 @@ class DB:
             elif types == "url":
                 collection = conn[RAKUTAN_COLLECTION]
                 collection.update({'id': int(uid)}, {'$set': {'url': value}})
+            elif types == "ver":
+                collection = conn['usertable']
+                collection.update({'uid': uid}, {'$set': {'verified': int(value)}})
             return 'success', count
         except:
             stderr(f"[error]updateDB:Cannnot update [{types}].")
@@ -342,6 +361,9 @@ class DB:
             if types == "fav":
                 query = {'$and': [{'uid': uid}, {'lectureid': int(search_id)}]}
                 collection = conn['userfav']
+            elif types == "ver":
+                query = {'uid': uid}
+                collection = conn['verification']
             else:
                 # query = {'$and': [{'search_id': int(search_id)}, {'url': url}]}
                 query = {'search_id': int(search_id)}
@@ -372,6 +394,7 @@ class DB:
 
     def isinDB(self, conn, uid):
         """Check if user is registered in database"""
+        verified = False
         try:
             collection = conn['usertable']
             query = {'uid': uid}
@@ -381,15 +404,76 @@ class DB:
             if count > 0:
                 for row in results:
                     color_theme = row['color_theme']
+                    if 'verified' in row and row['verified'] == 1:
+                        verified = True
             else:
                 self.add_to_db(conn, uid, "uid")
                 color_theme = "default"
 
-            return True, color_theme
+            return True, color_theme, verified
         except:
             stderr(f"[error]isinDB:Cannnot isin {uid}")
             color_theme = "default"
-            return False, color_theme
+            return False, color_theme, verified
+
+    def verification(self, conn, verificationCode):
+        status = False
+        try:
+            collection = conn['verification']
+            query = {'code': '{}'.format(verificationCode)}
+            results = collection.find(filter=query)
+            count = collection.count_documents(filter=query)
+            uid = ""
+
+            if count > 0:
+                for row in results:
+                    uid = row['uid']
+                    self.update_db(conn, uid, 1, "ver")
+                    self.delete_db(conn, 0, uid=uid, types="ver")
+                    status = True
+
+            return status
+        except:
+            stderr(f"[error]isinDB:Cannnot verify")
+            return False
+
+
+class KUWiki:
+    def __init__(self):
+        # Use ipv4 for kuwiki api
+        urllib3_cn.allowed_gai_family = self.allowed_gai_family
+
+    def allowed_gai_family(self):
+        """
+         https://github.com/shazow/urllib3/blob/master/urllib3/util/connection.py
+        """
+        family = socket.AF_INET
+        return family
+
+    def getKakomonURL(self, lectureName):
+        kakomonURL = []
+        try:
+            header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
+            param = {"name": lectureName}
+            res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param, timeout=1.5)
+            res_json = res.json()
+            # print(res_json)
+            lectureCount = res_json['count']
+
+            # iterate all possible lecture
+            for i in range(lectureCount):
+                # complete match
+                if res_json['results'][i]['name'] == lectureName:
+                    examCount = res_json['results'][i]['exam_count']
+                    # append kakomon URL to list
+                    for j in range(examCount):
+                        kakomonURL.append(res_json['results'][i]['exam_set'][0]['drive_link'])
+        except json.JSONDecodeError:
+            pass
+        except Timeout:
+            pass
+
+        return kakomonURL
 
 
 class Prepare:
@@ -403,10 +487,11 @@ class Prepare:
         self.json_content = {}
         self.json_contents = []
 
-    def rakutan_detail(self, array, fav="notyet", color="", omikuji=""):
+    def rakutan_detail(self, array, fav="notyet", color="", omikuji="", verified=False):
         """
         Rakutan detail for a specific lecture.
         Inside this function, json file for flex message is generated.
+        :param verified:
         :param fav:
         :param omikuji:
         :param array: lecture data from db
@@ -488,18 +573,35 @@ class Prepare:
         kakomon_symbol = body_contents[0]['contents'][6]['contents'][1]
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
 
-        if array['url'] != "":
+        if array['url']:
+            print(array['url'])
             kakomon_symbol['text'] = '〇'
             kakomon_symbol['color'] = '#0fd142'
+
             kakomon_link['text'] = 'リンク'
             kakomon_link['color'] = '#4c7cf5'
             kakomon_link['decoration'] = 'underline'
-            kakomon_link['action']['uri'] = array['url']
+            kakomon_link['action']['uri'] = array['url'][0]
+            if len(array['url']) > 1:
+                kakomon_link2 = kakomon_link.copy()
+                kakomon_link2['text'] = 'リンク2'
+                kakomon_link2['color'] = '#4c7cf5'
+                kakomon_link2['decoration'] = 'underline'
+                kakomon_link2['action']['uri'] = array['url'][1]
+                body_contents[0]['contents'][6]['contents'].append(kakomon_link2)
+
         else:
             url_provide_template = {"type": "postback", "label": "action", "data": "type=url&id="}
             url_provide_template['data'] += str(array['id'])
             kakomon_link['action'] = url_provide_template
             kakomon_link['text'] = '追加する'
+
+        if not verified:
+            url_provide_template = {"type": "message", "label": "action", "text": "ユーザ認証"}
+            kakomon_symbol['text'] = '×'
+            kakomon_symbol['color'] = '#ef1d2f'
+            kakomon_link['action'] = url_provide_template
+            kakomon_link['text'] = '未認証'
 
         if ENABLE_TWEET_SHARE:
             # make KKK shorter
@@ -635,6 +737,12 @@ class Prepare:
             return '---'
         else:
             return value
+
+    def isStudentAddress(self, value):
+        return re.match('[A-Za-z0-9\._+]+@st\.kyoto-u\.ac\.jp', value) is not None
+
+    def isOtherAddress(self, value):
+        return re.match('[A-Za-z0-9\._+]+@[A-Za-z]+\.[A-Za-z]', value) is not None
 
     def list_to_str(self, array):
         """
@@ -831,6 +939,20 @@ def push_flex():
     return "end"
 
 
+@app.route("/verification", methods=['GET'])
+def verify_user():
+    verificationCode = request.args.get('code', '')
+    db = DB()
+    mes = "認証に失敗しました。"
+    with db.connect() as client:
+        conn = client[mongo_db]
+        status = db.verification(conn, verificationCode)
+    if status:
+        mes = "認証に成功しました"
+
+    return mes
+
+
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -859,6 +981,7 @@ def handle_message(event):
 
     send = Send(token)
     db = DB()
+    kuWiki = KUWiki()
     prepare = Prepare(received_message, token)
 
     with db.connect() as client:
@@ -874,19 +997,39 @@ def handle_message(event):
                 elif count == 10000:
                     line_bot_api.link_rich_menu_to_user(uid, gold_menu)
         color_theme = check_user[1]
+        verified = check_user[2]
 
         # load reserved command dict
         response = module.response.command
 
         if received_message in response:
             # prepare params to pass
-            lists = [uid, received_message, color_theme, conn]
+            lists = [uid, received_message, color_theme, conn, verified]
 
             # 1.Check if reserved word is sent.
             response[received_message](token, lists)
         else:
+            # 2.Check if student address is sent:
+            if prepare.isStudentAddress(received_message):
+                if verified:
+                    send.send_text("すでに認証済みです。")
+                else:
+                    verificationCode = uuid.uuid4()
+                    db.delete_db(conn, 0, uid=uid, types="ver")
+                    db.add_to_db(conn, uid, "ver", '{}'.format(verificationCode))
+                    gmail = Gmail(received_message, '{}'.format(verificationCode))
+                    res = gmail.sendVerificationCode()
+                    if res:
+                        send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。")
+                    else:
+                        send.send_text("認証リンクを送信に失敗しました。")
+
+            # 2.Check if other address is sent:
+            elif prepare.isOtherAddress(received_message):
+                send.send_text("認証は学生アドレスのみ有効です。")
+
             # 2.Check if kakomon URL is sent:
-            if prepare.isURLID(received_message):
+            elif prepare.isURLID(received_message):
                 if prepare.isURL(received_message) or prepare.isEmptyURL(received_message):
                     fetch_result = db.get_by_id(conn, received_message[2:7])
                     if fetch_result[0] == 'success':
@@ -907,7 +1050,11 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array, fetch_fav)
+                    kakomonURL = []
+                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                    array["url"] = kakomonURL
+
+                    json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                     send.send_result(json_content, received_message, 'rakutan_detail')
                 else:
                     send.send_text(fetch_result[0])
@@ -924,8 +1071,11 @@ def handle_message(event):
 
                         array = prepare.list_to_str(array)
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
+                        kakomonURL = []
+                        if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                        array["url"] = kakomonURL
 
-                        json_content = prepare.rakutan_detail(array, fetch_fav)
+                        json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                         send.send_result(json_content, received_message, 'rakutan_detail')
                     # if query result is over 100:
                     elif record_count > 100:
@@ -996,7 +1146,7 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
-                    json_content = prepare.rakutan_detail(array, fetch_fav, "default")
+                    json_content = prepare.rakutan_detail(array, fetch_fav, "default", verified=verified)
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
                     json_text = [json.load(f)]
                     json_text[0]['body']['contents'][0]['text'] = text
