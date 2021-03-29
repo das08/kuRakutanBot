@@ -467,7 +467,8 @@ class KUWiki:
                     examCount = res_json['results'][i]['exam_count']
                     # append kakomon URL to list
                     for j in range(examCount):
-                        kakomonURL.append(res_json['results'][i]['exam_set'][0]['drive_link'])
+                        if res_json['results'][i]['field'][:2] == "全学": kakomonURL.append(
+                            res_json['results'][i]['exam_set'][0]['drive_link'])
         except json.JSONDecodeError:
             pass
         except Timeout:
@@ -574,7 +575,6 @@ class Prepare:
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
 
         if array['url']:
-            print(array['url'])
             kakomon_symbol['text'] = '〇'
             kakomon_symbol['color'] = '#0fd142'
 
@@ -1054,8 +1054,12 @@ def handle_message(event):
                     # get lectureinfo list
                     array = fetch_result[1]
                     kakomonURL = []
+                    print(array["url"])
                     if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
-                    array["url"] = kakomonURL
+                    if kakomonURL:
+                        array["url"] = kakomonURL
+                    elif array["url"]:
+                        array["url"] = [array["url"]]
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                     send.send_result(json_content, received_message, 'rakutan_detail')
@@ -1101,6 +1105,7 @@ def handle_message(event):
     send = Send(token)
     prepare = Prepare("postback", token)
     db = DB()
+    kuWiki = KUWiki()
 
     params = urllib.parse.parse_qs(received_postback)
     types = params.get('type')[0]
@@ -1109,6 +1114,8 @@ def handle_message(event):
     url = params.get('url')
     with db.connect() as client:
         conn = client[mongo_db]
+        check_user = db.isinDB(conn, uid)
+        verified = check_user[2]
 
         # process event when user pushes LINK ADD button
         if types == 'url':
@@ -1149,6 +1156,10 @@ def handle_message(event):
                 if fetch_result[0] == 'success':
                     # get lectureinfo list
                     array = fetch_result[1]
+                    kakomonURL = []
+                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']))
+                    array["url"] = kakomonURL
+
                     json_content = prepare.rakutan_detail(array, fetch_fav, "default", verified=verified)
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')
                     json_text = [json.load(f)]
