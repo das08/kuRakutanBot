@@ -60,11 +60,6 @@
           {
             "type": "text",
             "text": "認証について",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true,
             "weight": "bold",
             "size": "lg",
@@ -79,32 +74,17 @@
           {
             "type": "text",
             "text": "・本botでは認証リンクの送信にのみ学生アドレスを使用し、サーバー上に保存することはありません。",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true
           },
           {
             "type": "text",
             "text": "・過去問閲覧以外の機能は未認証でもそのままご利用いただけます。",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true,
             "weight": "bold"
           },
           {
             "type": "text",
             "text": "認証方法",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true,
             "weight": "bold",
             "size": "lg",
@@ -114,22 +94,12 @@
           {
             "type": "text",
             "text": "・お持ちの学生アドレス(@st.kyoto-u.ac.jp)をトーク画面にお送りください。",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true,
             "weight": "bold"
           },
           {
             "type": "text",
             "text": "・rakutanbot@gmail.comより送信された認証リンクをクリックすることで認証が完了します。",
-            "action": {
-              "type": "uri",
-              "label": "action",
-              "uri": "https://developers.line.biz/console/fx-beta/"
-            },
             "wrap": true
           }
         ],

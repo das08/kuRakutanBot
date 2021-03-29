@@ -6,7 +6,7 @@ import os
 import setting
 
 FROM_ADDRESS = 'rakutanbot@gmail.com'
-ENDPOINT = 'https://rakutandev.das82.com'
+ENDPOINT = os.environ["endpoint"]
 PASSWORD = os.environ["gmail_pass"]
 SUBJECT = '【京大楽単bot】認証リンクのお知らせ'
 BODY = """京大楽単botをご利用いただきありがとうございます。\n
