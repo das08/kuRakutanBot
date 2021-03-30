@@ -37,7 +37,7 @@ from linebot.models import (
 app = Flask(__name__)
 
 # ##### SETTINGS ##### #
-VERSION = "4.1.0"
+VERSION = "4.1.1"
 UPDATE_DATE = "2021.03.30"
 color_theme = ""
 
@@ -166,7 +166,7 @@ class DB:
             stderr(f"[error]get-by-id:Cannot #{search_id}")
             return "DB接続エラーです。時間を空けて再度お試しください。", "exception"
 
-    def get_query_result(self, conn, search_word):
+    def get_query_result(self, conn, search_word, original_search_word):
         """Get lecture list that matches search_word"""
         try:
             rakutan_data = {}
@@ -184,7 +184,7 @@ class DB:
             if count > 0:
                 mes = "success"
             else:
-                mes = f"「{search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
+                mes = f"「{original_search_word}」は見つかりませんでした。\n【検索のヒント】\n%を頭に付けて検索すると部分一致検索になります。デフォルトは前方一致検索です。"
             for row in results:
                 temp_list.append(row)
 
@@ -500,6 +500,16 @@ class KUWiki:
         text = mojimoji.han_to_zen(text)
         text = text.replace('（', '(')
         text = text.replace(')', ')')
+
+        text = text.replace('ＶＩＩＩ', 'VIII', 1)
+        text = text.replace('ＶＩＩ', 'VII', 1)
+        text = text.replace('ＶＩ', 'VI', 1)
+        text = text.replace('ＩＩＩ', 'III', 1)
+        text = text.replace('ＩＩ', 'II', 1)
+        text = text.replace('ＩＶ', 'IV', 1)
+        text = text.replace('Ｖ', 'V', 1)
+
+        text = text.replace('％', '%', 1)
 
         return text
 
@@ -1144,9 +1154,9 @@ def handle_message(event):
             else:
                 # print("before", received_message)
                 # アラビア数字等を変換
-                received_message = kuWiki.rConvertText(received_message)
+                # received_message = kuWiki.rConvertText(received_message)
                 # print("after", received_message)
-                fetch_result = db.get_query_result(conn, received_message)
+                fetch_result = db.get_query_result(conn, kuWiki.rConvertText(received_message), received_message)
                 stderr(f"[success]{uid}: {received_message}")
                 if fetch_result[0] == 'success':
                     array = fetch_result[1]
