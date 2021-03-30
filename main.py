@@ -274,7 +274,7 @@ class DB:
 
             if types == "normal":
                 query = {'$and': [{'facultyname': '国際高等教育院'}, {'accept_prev': {'$gt': 15}},
-                                  {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.8, '$total_prev']}]}}]}
+                                  {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.76, '$total_prev']}]}}]}
             elif types == "shrine":
                 query = {'$and': [{'groups': '人社'}, {'accept_prev': {'$gt': 15}},
                                   {'$expr': {'$gt': ['$accept_prev', {'$multiply': [0.7, '$total_prev']}]}}]}
@@ -450,7 +450,8 @@ class KUWiki:
         family = socket.AF_INET
         return family
 
-    def romanToArabic(self, text):
+    def convertText(self, text):
+        text = text[::-1]
         text = text.replace('Ⅰ', '1', 1)
         text = text.replace('Ⅱ', '2', 1)
         text = text.replace('Ⅲ', '3', 1)
@@ -459,21 +460,55 @@ class KUWiki:
         text = text.replace('Ⅵ', '6', 1)
         text = text.replace('Ⅶ', '7', 1)
         text = text.replace('Ⅷ', '8', 1)
-        # 順番大事
-        text = text.replace('VIII', '8', 1)
-        text = text.replace('VII', '7', 1)
-        text = text.replace('VI', '6', 1)
-        text = text.replace('IV', '4', 1)
+        # 順番大事かつreverseに注意
+        text = text.replace('IIIV', '8', 1)
+        text = text.replace('IIV', '7', 1)
+        text = text.replace('VI', '4', 1)
+        text = text.replace('IV', '6', 1)
         text = text.replace('V', '5', 1)
         text = text.replace('III', '3', 1)
         text = text.replace('II', '2', 1)
         text = text.replace('I', '1', 1)
+        text = text.replace('･', '・')
+        text = text.replace('（', '(')
+        text = text.replace(')', ')')
+
+        # text = text.replace('１', '1', 1)
+        # text = text.replace('２', '2', 1)
+        # text = text.replace('３', '3', 1)
+        # text = text.replace('４', '4', 1)
+        # text = text.replace('５', '5', 1)
+        # text = text.replace('６', '6', 1)
+        # text = text.replace('７', '7', 1)
+        # text = text.replace('８', '8', 1)
+
+        text = text[::-1]
+        return text
+
+    def rConvertText(self, text):
+        text = text.replace('1', 'I', 1)
+        text = text.replace('2', 'II', 1)
+        text = text.replace('3', 'III', 1)
+        text = text.replace('4', 'IV', 1)
+        text = text.replace('5', 'V', 1)
+        text = text.replace('6', 'VI', 1)
+        text = text.replace('7', 'VII', 1)
+        text = text.replace('8', 'VIII', 1)
+
+        text = text.replace('・', '･')
+
+        text = mojimoji.han_to_zen(text)
+        text = text.replace('（', '(')
+        text = text.replace(')', ')')
+
         return text
 
     def getKakomonURL(self, lectureName, oldKakomon):
         kakomonURL = []
         isFromKuWiki = False
-        lectureName = self.romanToArabic(lectureName)
+        # print("before",lectureName)
+        lectureName = self.convertText(lectureName)
+        # print("after", lectureName)
         try:
             header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
             param = {"name": lectureName}
@@ -529,6 +564,7 @@ class Prepare:
         :param color: FOR fn.omikuji
         :return: json_content
         """
+        print(array["lecturename"])
         if color != "":
             f = open(f'./theme/{color}/{rakutan_json_filepath}', 'r', encoding='utf-8')
         else:
@@ -1093,9 +1129,8 @@ def handle_message(event):
                     array = fetch_result[1]
                     kakomonURL = []
                     isFromKuWiki = False
-                    print(array["url"])
                     if verified:
-                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename'], kana=False), array["url"])
 
                     array["url"] = kakomonURL
                     array["kuWiki"] = isFromKuWiki
@@ -1107,6 +1142,10 @@ def handle_message(event):
 
             # 4. Check if lecturename is sent:
             else:
+                # print("before", received_message)
+                # アラビア数字等を変換
+                received_message = kuWiki.rConvertText(received_message)
+                # print("after", received_message)
                 fetch_result = db.get_query_result(conn, received_message)
                 stderr(f"[success]{uid}: {received_message}")
                 if fetch_result[0] == 'success':
@@ -1120,7 +1159,7 @@ def handle_message(event):
                         kakomonURL = []
                         isFromKuWiki = False
                         if verified:
-                            kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                            kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename'], kana=False),
                                                                             array["url"])
 
                         array["url"] = kakomonURL
@@ -1203,7 +1242,7 @@ def handle_message(event):
                     kakomonURL = []
                     isFromKuWiki = False
                     if verified:
-                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename'], kana=False),
                                                                         array["url"])
 
                     array["url"] = kakomonURL
