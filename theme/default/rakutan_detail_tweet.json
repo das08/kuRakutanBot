@@ -231,7 +231,8 @@
                 "text": "過去問",
                 "size": "sm",
                 "color": "#555555",
-                "flex": 4
+                "flex": 4,
+                "wrap": true
               },
               {
                 "type": "text",
