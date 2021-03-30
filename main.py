@@ -472,6 +472,7 @@ class KUWiki:
 
     def getKakomonURL(self, lectureName, oldKakomon):
         kakomonURL = []
+        isFromKuWiki = False
         lectureName = self.romanToArabic(lectureName)
         try:
             header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
@@ -491,7 +492,9 @@ class KUWiki:
 
                     # append kakomon URL to list
                     for j in range(examCount):
-                        if isZengaku: kakomonURL.append(res_json['results'][i]['exam_set'][j]['drive_link'])
+                        if isZengaku:
+                            kakomonURL.append(res_json['results'][i]['exam_set'][j]['drive_link'])
+                            isFromKuWiki = True
 
             if not isZengaku and oldKakomon:
                 kakomonURL.append(oldKakomon)
@@ -501,7 +504,7 @@ class KUWiki:
         except Timeout:
             pass
 
-        return kakomonURL
+        return kakomonURL, isFromKuWiki
 
 
 class Prepare:
@@ -598,6 +601,7 @@ class Prepare:
                 judge_view['color'] = f"{value[1]}"
                 break
         # modify url
+        kakomon_header = body_contents[0]['contents'][6]['contents'][0]
         kakomon_symbol = body_contents[0]['contents'][6]['contents'][1]
         kakomon_link = body_contents[0]['contents'][6]['contents'][2]
 
@@ -616,6 +620,9 @@ class Prepare:
                 kakomon_link2['decoration'] = 'underline'
                 kakomon_link2['action']['uri'] = array['url'][1]
                 body_contents[0]['contents'][6]['contents'].append(kakomon_link2)
+            if array['kuWiki']:
+                kakomon_header['text'] += '\n(京大wiki提供)'
+
 
         else:
             url_provide_template = {"type": "uri", "label": "action", "uri": "https://www.kuwiki.net/volunteer"}
@@ -1085,10 +1092,13 @@ def handle_message(event):
                     # get lectureinfo list
                     array = fetch_result[1]
                     kakomonURL = []
+                    isFromKuWiki = False
                     print(array["url"])
-                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+                    if verified:
+                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
 
                     array["url"] = kakomonURL
+                    array["kuWiki"] = isFromKuWiki
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                     send.send_result(json_content, received_message, 'rakutan_detail')
@@ -1108,8 +1118,13 @@ def handle_message(event):
                         array = prepare.list_to_str(array)
                         fetch_fav = db.get_userfav(conn, uid, array['id'])
                         kakomonURL = []
-                        if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+                        isFromKuWiki = False
+                        if verified:
+                            kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                                                                            array["url"])
+
                         array["url"] = kakomonURL
+                        array["kuWiki"] = isFromKuWiki
 
                         json_content = prepare.rakutan_detail(array, fetch_fav, verified=verified)
                         send.send_result(json_content, received_message, 'rakutan_detail')
@@ -1186,8 +1201,13 @@ def handle_message(event):
                     # get lectureinfo list
                     array = fetch_result[1]
                     kakomonURL = []
-                    if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+                    isFromKuWiki = False
+                    if verified:
+                        kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                                                                        array["url"])
+
                     array["url"] = kakomonURL
+                    array["kuWiki"] = isFromKuWiki
 
                     json_content = prepare.rakutan_detail(array, fetch_fav, "default", verified=verified)
                     f = open(f'./theme/etc/singletext.json', 'r', encoding='utf-8')

@@ -36,8 +36,12 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
                 array = getRakutanInfo[1]
                 fetch_fav = db.get_userfav(conn, uid, array['id'])
                 kakomonURL = []
-                if verified: kakomonURL = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']), array["url"])
+                isFromKuWiki = False
+                if verified:
+                    kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                                                                    array["url"])
                 array["url"] = kakomonURL
+                array["kuWiki"] = isFromKuWiki
 
                 json_content = prepare.rakutan_detail(array, fetch_fav, color_theme, omikuji_type, verified=verified)
                 send.send_result(json_content, alt_text, 'omikuji')
