@@ -38,7 +38,7 @@ def prepareOmikuji(token, color_theme, omikuji_type, alt_text, uid, verified):
                 kakomonURL = []
                 isFromKuWiki = False
                 if verified:
-                    kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename']),
+                    kakomonURL, isFromKuWiki = kuWiki.getKakomonURL(mojimoji.zen_to_han(array['lecturename'], kana=False),
                                                                     array["url"])
                 array["url"] = kakomonURL
                 array["kuWiki"] = isFromKuWiki
