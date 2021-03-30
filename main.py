@@ -450,8 +450,29 @@ class KUWiki:
         family = socket.AF_INET
         return family
 
+    def romanToArabic(self, text):
+        text = text.replace('Ⅰ', '1', 1)
+        text = text.replace('Ⅱ', '2', 1)
+        text = text.replace('Ⅲ', '3', 1)
+        text = text.replace('Ⅳ', '4', 1)
+        text = text.replace('Ⅴ', '5', 1)
+        text = text.replace('Ⅵ', '6', 1)
+        text = text.replace('Ⅶ', '7', 1)
+        text = text.replace('Ⅷ', '8', 1)
+        # 順番大事
+        text = text.replace('VIII', '8', 1)
+        text = text.replace('VII', '7', 1)
+        text = text.replace('VI', '6', 1)
+        text = text.replace('IV', '4', 1)
+        text = text.replace('V', '5', 1)
+        text = text.replace('III', '3', 1)
+        text = text.replace('II', '2', 1)
+        text = text.replace('I', '1', 1)
+        return text
+
     def getKakomonURL(self, lectureName, oldKakomon):
         kakomonURL = []
+        lectureName = self.romanToArabic(lectureName)
         try:
             header = {"Authorization": 'Token {}'.format(kuwiki_api_token)}
             param = {"name": lectureName}
@@ -472,7 +493,6 @@ class KUWiki:
                     for j in range(examCount):
                         if isZengaku: kakomonURL.append(res_json['results'][i]['exam_set'][j]['drive_link'])
 
-            print("zengaku", isZengaku)
             if not isZengaku and oldKakomon:
                 kakomonURL.append(oldKakomon)
 
