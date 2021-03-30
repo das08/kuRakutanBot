@@ -37,7 +37,7 @@ from linebot.models import (
 app = Flask(__name__)
 
 # ##### SETTINGS ##### #
-VERSION = "4.1.1"
+VERSION = "4.1.2"
 UPDATE_DATE = "2021.03.30"
 color_theme = ""
 
@@ -542,6 +542,9 @@ class KUWiki:
                             isFromKuWiki = True
 
             if not isZengaku and oldKakomon:
+                kakomonURL.append(oldKakomon)
+            # もし一致件数0の時（apiの不具合等）
+            if lectureCount == 0:
                 kakomonURL.append(oldKakomon)
 
         except json.JSONDecodeError:
