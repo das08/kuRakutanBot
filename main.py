@@ -515,6 +515,7 @@ class KUWiki:
 
     def getKakomonURL(self, lectureName, oldKakomon):
         kakomonURL = []
+        lectureCount = 0
         isFromKuWiki = False
         # print("before",lectureName)
         lectureName = self.convertText(lectureName)
@@ -525,7 +526,7 @@ class KUWiki:
             res = requests.get('{}/course/'.format(kuwiki_api_endpoint), headers=header, params=param, timeout=1.5)
             res_json = res.json()
             # print(res_json)
-            lectureCount = res_json['count']
+            if 'count' in res_json:lectureCount = res_json['count']
             isZengaku = True
 
             # iterate all possible lecture
@@ -544,7 +545,7 @@ class KUWiki:
             if not isZengaku and oldKakomon:
                 kakomonURL.append(oldKakomon)
             # もし一致件数0の時（apiの不具合等）
-            if lectureCount == 0:
+            if lectureCount == 0 and oldKakomon:
                 kakomonURL.append(oldKakomon)
 
         except json.JSONDecodeError:
