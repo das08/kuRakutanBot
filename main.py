@@ -1030,12 +1030,12 @@ def push_flex():
 def verify_user():
     verificationCode = request.args.get('code', '')
     db = DB()
-    mes = "認証に失敗しました。"
+    mes = "すでに認証済みか、認証コードが間違っています。"
     with db.connect() as client:
         conn = client[mongo_db]
         status = db.verification(conn, verificationCode)
     if status:
-        mes = "認証に成功しました"
+        mes = "認証に成功しました。"
 
     return mes
 
@@ -1107,7 +1107,7 @@ def handle_message(event):
                     gmail = Gmail(received_message, '{}'.format(verificationCode))
                     res = gmail.sendVerificationCode()
                     if res:
-                        send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。")
+                        send.send_text("認証リンクを送信しました。メール内のリンクをクリックしてください。メールが届かない場合は入力したアドレスが正しいことを確認してください。")
                     else:
                         send.send_text("認証リンクを送信に失敗しました。")
 
