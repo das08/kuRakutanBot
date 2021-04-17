@@ -37,8 +37,8 @@ from linebot.models import (
 app = Flask(__name__)
 
 # ##### SETTINGS ##### #
-VERSION = "4.1.2"
-UPDATE_DATE = "2021.03.30"
+VERSION = "4.1.3"
+UPDATE_DATE = "2021.04.17"
 color_theme = ""
 
 THIS_YEAR = 2020
