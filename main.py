@@ -174,9 +174,9 @@ class DB:
             collection = conn[RAKUTAN_COLLECTION]
 
             if search_word[0] == '%':
-                query = {'lecturename': {'$regex': f'{search_word[1:]}', '$options': 'i'}}
+                query = {'lecturename': {'$regex': f'{original_search_word[1:]}', '$options': 'i'}}
             else:
-                query = {'lecturename': {'$regex': f'^{search_word}', '$options': 'i'}}
+                query = {'lecturename': {'$regex': f'^{original_search_word}', '$options': 'i'}}
 
             results = collection.find(filter=query, projection={'_id': False})
             count = collection.count_documents(filter=query)
