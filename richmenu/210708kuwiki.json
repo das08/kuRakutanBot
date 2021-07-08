@@ -1,0 +1,111 @@
+//{
+//    "richMenuId": "richmenu-49106fb7f3d78fcb85acf0f2440af6c0"
+//}
+
+{
+            "name": "210708kuwiki2",
+            "size": {
+                "width": 2500,
+                "height": 1686
+            },
+            "chatBarText": "メニュー",
+            "selected": true,
+            "areas": [
+                {
+                    "bounds": {
+                        "x": 0,
+                        "y": 0,
+                        "width": 2500,
+                        "height": 842
+                    },
+                    "action": {
+                        "type": "uri",
+                        "uri": "https://sites.google.com/view/siketai/home/teikyo"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 0,
+                        "y": 843,
+                        "width": 780,
+                        "height": 843
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "お気に入り"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 780,
+                        "y": 843,
+                        "width": 780,
+                        "height": 843
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "おみくじ"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 1560,
+                        "y": 843,
+                        "width": 666,
+                        "height": 843
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "ヘルプ"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 2226,
+                        "y": 843,
+                        "width": 274,
+                        "height": 218
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "@info"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 2226,
+                        "y": 1061,
+                        "width": 274,
+                        "height": 201
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "鬼単おみくじ"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 2226,
+                        "y": 1262,
+                        "width": 274,
+                        "height": 201
+                    },
+                    "action": {
+                        "type": "uri",
+                        "uri": "https://www.z.k.kyoto-u.ac.jp/download/academic-calendar/academic_calendar_ja.pdf"
+                    }
+                },
+                {
+                    "bounds": {
+                        "x": 2226,
+                        "y": 1463,
+                        "width": 274,
+                        "height": 223
+                    },
+                    "action": {
+                        "type": "message",
+                        "text": "京大楽単bot"
+                    }
+                }
+            ]
+        }
