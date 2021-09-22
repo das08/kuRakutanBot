@@ -37,12 +37,12 @@ from linebot.models import (
 app = Flask(__name__)
 
 # ##### SETTINGS ##### #
-VERSION = "4.1.3"
-UPDATE_DATE = "2021.04.17"
+VERSION = "5.0.0"
+UPDATE_DATE = "2021.09.22"
 color_theme = ""
 
-THIS_YEAR = 2020
-RAKUTAN_COLLECTION = "rakutan2020"
+THIS_YEAR = 2021
+RAKUTAN_COLLECTION = "rakutan2021"
 ENABLE_TWEET_SHARE = True
 
 if ENABLE_TWEET_SHARE:
