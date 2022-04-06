@@ -3,6 +3,11 @@
 
 <img src="https://user-images.githubusercontent.com/41512077/71648884-4e714800-2d4d-11ea-8871-97aec26d4e8b.jpg" width="150px">
 
+# 移行しました！
+バックエンドの処理をPythonからGoに変更しました。  
+データベースにはRedisを追加し、高速化もしました。  
+[das08/kuRakutanBot-go](https://github.com/das08/kuRakutanBot-go)
+
 # 友だち追加
 「京大楽単Bot」を友だち追加するには以下のボタンもしくはQRコードからお願いします。  
 
